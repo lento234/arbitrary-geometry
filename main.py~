@@ -1,0 +1,39 @@
+# -*- coding: utf-8 -*-
+"""
+Case: Arbitrary Geometry\n
+Methodology: Solving any geometry using Panel Method\n
+
+"""
+
+from pylab import *
+ion()
+
+from numpy import *
+from scipy import *
+
+# Custom Modules
+from Vort2D import *
+from unitVec import *
+
+
+# Control Parameters
+
+Uinf = 10.0
+Winf = 0.0
+
+
+class Geometry(object):
+    def __init__(self,name,x,y):
+        self.name = name
+        self.x = x
+        self.y = y
+        
+airfoilA = Geometry('airfoilA',array([1,2]),array([3,4]))
+airfoilB = Geometry('airfoilB',array([1,2]),array([3,4]))
+
+geometries = (airfoilA,airfoilB)
+
+coordinates = Geometry('coordinates',array([]),array([]))
+for object in geometries:
+    coordinates.x = concatenate((coordinates.x,object.x))
+    coordinates.y = concatenate((coordinates.y,object.y))
