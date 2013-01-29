@@ -44,7 +44,8 @@ class Geometry(object):
         
         '''
         self.panelStart = Geometry('panel start',self.x[:-1],self.y[:-1])
-        self.panelEnd = Geometry('panel end',self.x[1:],self.y[1:])    
+        self.panelEnd = Geometry('panel end',self.x[1:],self.y[1:])
+        
          
         
 # Control Parameters
@@ -54,10 +55,11 @@ Winf = 0.0
 # Defining Geometry      
 airfoilA = Geometry('airfoilA',array([-1.0,-0.75,-0.5,-0.75,-1.0]),array([0.0,0.25,0.0,-0.25,0.0]))
 airfoilB = Geometry('airfoilB',array([0.5,0.75,1.0,0.75,0.5]),array([0.0,0.25,0.0,-0.25,0.0]))
-
+airfoilC = Geometry('airfoilC',array([1.5,1.75,2.0,1.75,1.5]),array([0.0,0.25,0.0,-0.25,0.0]))
+airfoilD = Geometry('airfoilD',array([2.5,2.75,3.0,2.75,2.5]),array([0.0,0.25,0.0,-0.25,0.0]))
 
 # aribitrary.py module
-geometries = (airfoilA,airfoilB)
+geometries = (airfoilA,airfoilB,airfoilC,airfoilD)
 
 controlPoints = Geometry('control point',array([]),array([]))
 panelStart = Geometry('panel start',array([]),array([]))
@@ -98,25 +100,61 @@ panelStart.y = tile(panelStart.y,[shape(controlPoints.y)[0],1])
 panelEnd.x = tile(panelEnd.x,[shape(controlPoints.x)[0],1])
 panelEnd.y = tile(panelEnd.y,[shape(controlPoints.y)[0],1])
 
-unitNorm.x = tile(array([unitNorm.x]).transpose(),[1,len(panelStart.x)])
-unitNorm.y = tile(array([unitNorm.y]).transpose(),[1,len(panelStart.y)])
+unitNorm.x = tile(array([unitNorm.x]).transpose(),[1,shape(controlPoints.x)[1]])
+unitNorm.y = tile(array([unitNorm.y]).transpose(),[1,shape(controlPoints.y)[1]])
 
-unitTang.x = tile(array([unitTang.x]).transpose(),[1,len(panelStart.x)])
-unitTang.y = tile(array([unitTang.y]).transpose(),[1,len(panelStart.y)])
+unitTang.x = tile(array([unitTang.x]).transpose(),[1,shape(controlPoints.x)[1]])
+unitTang.y = tile(array([unitTang.y]).transpose(),[1,shape(controlPoints.x)[1]])
 
 sigma = ones([shape(controlPoints.x)[0],shape(panelStart.x)[1]])
 
-# Solving the problem
+####################################################################
+'''             Solving the problem                             '''
+
 u,w = sor2D(sigma, (controlPoints.x,controlPoints.y), (panelStart.x, panelStart.y), (panelEnd.x, panelEnd.y))
 A = u*unitNorm.x + w*unitNorm.y
 RHS = -(Uinf*unitNorm.x[:,0] + Winf*unitNorm.y[:,0])
 
 Sigma = solve(A,RHS)
 
-#coordinates.x = reshape(coordinates.x,(len(geometries),1,len(geometries[0].x)))
-#coordinates.y = reshape(coordinates.y,(len(geometries),1,len(geometries[0].y)))
-#coordinates.cpx = reshape(coordinates.cpx,(len(geometries),1,len(geometries[0].cpx)))
-#coordinates.cpy = reshape(coordinates.cpy,(len(geometries),1,len(geometries[0].cpy)))
+####################################################################
+'''               Calculating the results                        '''
+
+Sigma = tile(Sigma,[shape(controlPoints.x)[0],1])
+#Induced Velocity at control point
+u,w = sor2D(Sigma, (controlPoints.x,controlPoints.y), (panelStart.x, panelStart.y), (panelEnd.x, panelEnd.y))
+Q     = concatenate(([sum(u,axis=1)],[sum(w,axis=1)])) + array([[Uinf],[Winf]]) 
+Qt    = Q[0,:]*unitTang.x[:,0] + Q[1,:]*unitTang.y[:,0] # tangential velocity
+Qn    = Q[0,:]*unitNorm.x[:,0] + Q[1,:]*unitNorm.y[:,0] # normal velocity
+Qres  = sqrt(pow(Q[0,:],2) + pow(Q[1,:],2)) # resultant velocity
+
+#Storing Data
+class finalResult(object):
+    def __init__(self,name):
+        self.name = name
+        
+result = finalResult('Results')
+result.__setattr__('Geometries',array([add(range(len(geometries)),1)]).transpose())
+
+result.__setattr__('controlPoints',finalResult('Panel points'))
+result.controlPoints.__setattr__('x',reshape(controlPoints.x[:,0],(len(geometries),len(geometries[0].cp.x))))
+result.controlPoints.__setattr__('y',reshape(controlPoints.y[:,0],(len(geometries),len(geometries[0].cp.y))))
+
+result.__setattr__('Q',finalResult('Induced velocity'))
+result.Q.__setattr__('x',reshape(Q[0],(len(geometries),len(geometries[0].cp.x))))
+result.Q.__setattr__('y',reshape(Q[1],(len(geometries),len(geometries[0].cp.y))))
+
+result.__setattr__('Qt',reshape(Qt,(len(geometries),len(geometries[0].cp.x))))
+result.__setattr__('Qn',reshape(Qn,(len(geometries),len(geometries[0].cp.x))))
+result.__setattr__('Qres',reshape(Qres,(len(geometries),len(geometries[0].cp.x))))
 
 
+figure(1)
+plot(result.controlPoints.x,result.controlPoints.y,'b.')
+quiver(result.controlPoints.x,result.controlPoints.y,result.Q.x,result.Q.y,result.Qres)
+xlabel('x-coordinate [-]')
+ylabel('y-coordinate [-]')
+axis([-2, 2, -2, 2])
+axis('equal')
+grid()
 
