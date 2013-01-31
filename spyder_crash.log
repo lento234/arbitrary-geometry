@@ -1,8 +1,0 @@
-Traceback (most recent call last):
-  File "/usr/lib/python2.7/dist-packages/spyderlib/spyder.py", line 2006, in main
-    mainwindow = run_spyder(app, options)
-  File "/usr/lib/python2.7/dist-packages/spyderlib/spyder.py", line 1916, in run_spyder
-    main = MainWindow(options)
-  File "/usr/lib/python2.7/dist-packages/spyderlib/spyder.py", line 245, in __init__
-    QMainWindow.__init__(self)
-KeyboardInterrupt

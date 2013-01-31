@@ -9,20 +9,38 @@ Description: Contains the arbitrary.py modules\n
 # extra modules
 
 from numpy import *
-
-
-############################################################################
-
-def arbitrary(geometries):
-    
-    
-
-
-
-
-
+#from scipy import *
 
 ############################################################################
+
+def sourceTerm(geometries):
+    
+    data = {}
+    for name in geometries:
+        data[name] = dataClass() # empty data class
+        # saving x and y data points into .points                
+        data[name].__setattr__('points',Geometry('Geometry points',geometries[name][0],geometries[name][1]))
+        data[name].__setattr__('unitVectors',dataClass())
+        data[name].__setattr__('controlPoints',dataClass())
+        data[name].__setattr__('panel',dataClass())
+        
+        calc_unitVectors(data[name]) # calculate unitVectors
+        calc_controlPoints(data[name]) # calculate control points
+        calc_panelPoints(data[name])
+    
+        
+
+    
+    return data
+
+############################################################################    
+
+class dataClass(object):
+    '''Generates an empty class    
+    '''
+    def __init__(self):
+        pass
+
 class Geometry(object):
     '''Geometry Class. Defines the name, x and y coordinates
     
@@ -39,8 +57,12 @@ def calc_unitVectors(object):
     
     calc_unitVectors(object) -> object.unitNorm, object.unitTang
     '''
-    object.unitNorm = normVec((object.x[:-1],object.y[:-1]),(object.x[1:],object.y[1:]))
-    object.unitTang = tangVec((object.x[:-1],object.y[:-1]),(object.x[1:],object.y[1:]))
+    
+    norm = normVec((object.points.x[:-1],object.points.y[:-1]),(object.points.x[1:],object.points.y[1:]))
+    tang = tangVec((object.points.x[:-1],object.points.y[:-1]),(object.points.x[1:],object.points.y[1:]))
+    
+    object.unitVectors.norm = Geometry('normal vectors',norm[0],norm[1]) 
+    object.unitVectors.tang = Geometry('normal vectors',tang[0],tang[1])
     
     return object
     
@@ -50,8 +72,8 @@ def calc_controlPoints(object):
     calc_controlPoints(object) -> object.controlPoints.x, object.controlPoints.y
     '''
    
-    cpx = (object.x[1:] + object.x[:-1])/2 + 100*object.unitNorm[0]*finfo(float).eps
-    cpy = (object.y[1:] + object.y[:-1])/2 + 100*object.unitNorm[1]*finfo(float).eps
+    cpx = (object.points.x[1:] + object.points.x[:-1])/2 + 100*object.unitVectors.norm.x*finfo(float).eps
+    cpy = (object.points.y[1:] + object.points.y[:-1])/2 + 100*object.unitVectors.norm.y*finfo(float).eps
    
     object.controlPoints = Geometry('control points',cpx,cpy)
     
@@ -63,8 +85,8 @@ def calc_panelPoints(object):
     calc_panelPoints(object) -> object.panelStart(.x,.y), object.panelEnd(.x,.y)        
     '''
     
-    object.panelStart = Geometry('panel start', object.x[:-1], object.y[:-1])
-    object.panelEnd = Geometry('panel end', object.x[1:], object.y[1:])
+    object.panel.start = Geometry('panel start', object.points.x[:-1], object.points.y[:-1])
+    object.panel.end = Geometry('panel end', object.points.x[1:], object.points.y[1:])
     
     return object
 
