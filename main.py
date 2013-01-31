@@ -26,25 +26,25 @@ class Geometry(object):
         self.x = x
         self.y = y
         
-    def unitVectors(self):
-        self.unitNorm = normVec((self.x[:-1],self.y[:-1]),(self.x[1:],self.y[1:]))
-        self.unitTang = tangVec((self.x[:-1],self.y[:-1]),(self.x[1:],self.y[1:]))
+    #def unitVectors(self):
+    #   self.unitNorm = normVec((self.x[:-1],self.y[:-1]),(self.x[1:],self.y[1:]))
+    #   self.unitTang = tangVec((self.x[:-1],self.y[:-1]),(self.x[1:],self.y[1:]))
         
-    def controlPoints(self):   
-        '''
-        Generates the control points
-        
-        '''
-        cpx = (self.x[1:]+self.x[:-1])/2 + 100*self.unitNorm[0]*finfo(float).eps
-        cpy = (self.y[1:]+self.y[:-1])/2 + 100*self.unitNorm[1]*finfo(float).eps
-        self.cp = Geometry('control points',cpx,cpy)
-    def panelPoints(self):
-        '''
-        Generates the panel starting and end points
-        
-        '''
-        self.panelStart = Geometry('panel start',self.x[:-1],self.y[:-1])
-        self.panelEnd = Geometry('panel end',self.x[1:],self.y[1:])
+    #def controlPoints(self):   
+    #    '''
+    #    Generates the control points
+    #    
+    #    '''
+    #    cpx = (self.x[1:]+self.x[:-1])/2 + 100*self.unitNorm[0]*finfo(float).eps
+    #    cpy = (self.y[1:]+self.y[:-1])/2 + 100*self.unitNorm[1]*finfo(float).eps
+    #    self.cp = Geometry('control points',cpx,cpy)
+    #def panelPoints(self):
+    #    '''
+    #    Generates the panel starting and end points
+    #    
+    #    '''
+    #    self.panelStart = Geometry('panel start',self.x[:-1],self.y[:-1])
+    #    self.panelEnd = Geometry('panel end',self.x[1:],self.y[1:])
         
          
         
@@ -55,11 +55,11 @@ Winf = 0.0
 # Defining Geometry      
 airfoilA = Geometry('airfoilA',array([-1.0,-0.75,-0.5,-0.75,-1.0]),array([0.0,0.25,0.0,-0.25,0.0]))
 airfoilB = Geometry('airfoilB',array([0.5,0.75,1.0,0.75,0.5]),array([0.0,0.25,0.0,-0.25,0.0]))
-airfoilC = Geometry('airfoilC',array([1.5,1.75,2.0,1.75,1.5]),array([0.0,0.25,0.0,-0.25,0.0]))
-airfoilD = Geometry('airfoilD',array([2.5,2.75,3.0,2.75,2.5]),array([0.0,0.25,0.0,-0.25,0.0]))
+#airfoilC = Geometry('airfoilC',array([1.5,1.75,2.0,1.75,1.5]),array([0.0,0.25,0.0,-0.25,0.0]))
+#airfoilD = Geometry('airfoilD',array([2.5,2.75,3.0,2.75,2.5]),array([0.0,0.25,0.0,-0.25,0.0]))
 
 # aribitrary.py module
-geometries = (airfoilA,airfoilB,airfoilC,airfoilD)
+geometries = (airfoilA,airfoilB)#,airfoilC,airfoilD)
 
 controlPoints = Geometry('control point',array([]),array([]))
 panelStart = Geometry('panel start',array([]),array([]))
@@ -67,16 +67,48 @@ panelEnd = Geometry('panel end',array([]),array([]))
 unitNorm = Geometry('normal vector',array([]),array([]))
 unitTang = Geometry('tang vector',array([]),array([]))
 
+def calc_unitVectors(object):
+    '''Calculates the unit vectors of the geometry (object)\n
+    
+    calc_unitVectors(object) -> object.unitNorm, object.unitTang
+    '''
+    object.unitNorm = normVec((object.x[:-1],object.y[:-1]),(object.x[1:],object.y[1:]))
+    object.unitTang = tangVec((object.x[:-1],object.y[:-1]),(object.x[1:],object.y[1:]))
+    
+    return object
+    
+def calc_controlPoints(object):
+    '''Generates the control points\n
+    
+    calc_controlPoints(object) -> object.controlPoints.x, object.controlPoints.y
+    '''
+   
+    cpx = (object.x[1:] + object.x[:-1])/2 + 100*object.unitNorm[0]*finfo(float).eps
+    cpy = (object.y[1:] + object.y[:-1])/2 + 100*object.unitNorm[1]*finfo(float).eps
+   
+    object.controlPoints = Geometry('control points',cpx,cpy)
+    
+def calc_panelPoints(object):
+    '''Generates the panel starting and end points
+    
+    
+        
+    '''
+    
+    object.panelStart = Geometry('panel start', object.x[:-1], object.y[:-1])
+    object.panelEnd = Geometry('panel end', object.x[1:], object.y[1:])
+    
+
 for num in range(len(geometries)):
     
     # Calling the methods to calculate control points and panel edge points
-    geometries[num].unitVectors()
-    geometries[num].controlPoints()
-    geometries[num].panelPoints()
+    calc_unitVectors(geometries[num])
+    calc_controlPoints(geometries[num])
+    calc_panelPoints(geometries[num])
     
     # Concatenating the geometries
-    controlPoints.x = concatenate((controlPoints.x,geometries[num].cp.x),axis=0)
-    controlPoints.y = concatenate((controlPoints.y,geometries[num].cp.y),axis=0)
+    controlPoints.x = concatenate((controlPoints.x,geometries[num].controlPoints.x),axis=0)
+    controlPoints.y = concatenate((controlPoints.y,geometries[num].controlPoints.y),axis=0)
     
     panelStart.x = concatenate((panelStart.x,geometries[num].panelStart.x),axis=0)    
     panelStart.y = concatenate((panelStart.y,geometries[num].panelStart.y),axis=0)
@@ -137,16 +169,16 @@ result = finalResult('Results')
 result.__setattr__('Geometries',array([add(range(len(geometries)),1)]).transpose())
 
 result.__setattr__('controlPoints',finalResult('Panel points'))
-result.controlPoints.__setattr__('x',reshape(controlPoints.x[:,0],(len(geometries),len(geometries[0].cp.x))))
-result.controlPoints.__setattr__('y',reshape(controlPoints.y[:,0],(len(geometries),len(geometries[0].cp.y))))
+result.controlPoints.__setattr__('x',reshape(controlPoints.x[:,0],(len(geometries),len(geometries[0].controlPoints.x))))
+result.controlPoints.__setattr__('y',reshape(controlPoints.y[:,0],(len(geometries),len(geometries[0].controlPoints.y))))
 
 result.__setattr__('Q',finalResult('Induced velocity'))
-result.Q.__setattr__('x',reshape(Q[0],(len(geometries),len(geometries[0].cp.x))))
-result.Q.__setattr__('y',reshape(Q[1],(len(geometries),len(geometries[0].cp.y))))
+result.Q.__setattr__('x',reshape(Q[0],(len(geometries),len(geometries[0].controlPoints.x))))
+result.Q.__setattr__('y',reshape(Q[1],(len(geometries),len(geometries[0].controlPoints.y))))
 
-result.__setattr__('Qt',reshape(Qt,(len(geometries),len(geometries[0].cp.x))))
-result.__setattr__('Qn',reshape(Qn,(len(geometries),len(geometries[0].cp.x))))
-result.__setattr__('Qres',reshape(Qres,(len(geometries),len(geometries[0].cp.x))))
+result.__setattr__('Qt',reshape(Qt,(len(geometries),len(geometries[0].controlPoints.x))))
+result.__setattr__('Qn',reshape(Qn,(len(geometries),len(geometries[0].controlPoints.x))))
+result.__setattr__('Qres',reshape(Qres,(len(geometries),len(geometries[0].controlPoints.x))))
 
 
 figure(1)
