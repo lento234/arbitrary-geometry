@@ -1,34 +1,173 @@
 # -*- coding: utf-8 -*-
 """
-Case:Arbitrary Geometry\n
-Methodology: Solving any geometry using Panel Method\n
-Description: Contains the arbitrary.py modules\n 
+Case:Arbitrary Geometry
+Methodology: Solving any geometry using Panel Method
+Description: Contains the multipleGeometry.py modules 
 @author: lento
 """
 
 # external modules
-
 from numpy import *
-#from scipy import *
 
 ############################################################################
 
 # module to calculate the source term (only)
-def sourceTerm(geometries):
+def sourceTerm(geometries, Uinf=0, Winf=0, calc_inducedVelocity = False):
+    ''' Calculates the source term for a given geometries
+    
+    sourceTerm(geometries,Uinf,Winf) -> data
+    
+    Parameters
+    ---------
+    geometries: dictionary of geometries
+        Key:
+            name of geometry\n
+        Content:
+            array of x, y coordinates in row 0 and 1 respectively\n
+        
+    Uinf, Winf (optional): Freestream velocity, optional else zero.
+        Uinf:
+            Freestream, in x-axis\n
+        Winf:
+            Freestream, in y-axis\n
+        
+    calc_inducedVelocity [ignore]:
+        
+    Returns
+    -------
+    data: 'data' class containing all the data (row 0 = x-axis, row 1 = y-axis)
+        data.points: 
+            all the points\n
+        data.unitVectors (.norm, .tang):
+            the unit vectors of panel\n
+        data.controlPoints:
+            all the control points (mid-point of panel)\n
+        data.panel (.start, .end):
+            split the panel points to start and end\n
+        data.Sigma:
+            source term of the problem\n
+    '''
     
     # Initially arranging and organizing the data
     data = organizeData(geometries)
     
+    # Reshapes the data accordingally
     controlPoints, panelEnd, panelStart, unitNorm, unitTang = reshapeData(data)
     
-    print controlPoints.x, controlPoints.y
-    print panelEnd.x, panelEnd.y
-    print panelStart.x, panelStart.y
-    print unitNorm.x, unitNorm.y
-    print unitTang.x, unitTang.y
+    # Solving the problem
+    sigma = ones(shape(controlPoints.x)) # unit source
+    
+    u,w = sor2D(sigma, (controlPoints.x,controlPoints.y), (panelStart.x, panelStart.y), (panelEnd.x, panelEnd.y))
+    A   = u*unitNorm.x + w*unitNorm.y
+    RHS = -(Uinf*unitNorm.x[:,0] + Winf*unitNorm.y[:,0])
+    
+    Sigma = linalg.solve(A,RHS)
+    
+    # Storing the data to data[].Sigma
+    start = 0
+    for num in range(len(data)):
+        end = shape(data[data.keys()[num]].controlPoints)[1]
+        data[data.keys()[num]].__setattr__('Sigma',Sigma[start:(start+end)])
+        start = end
+    
+    # returning the data, either to inducedVelocities method or normal     
+    if calc_inducedVelocity == True:
+        return data, controlPoints, panelEnd, panelStart, Sigma, unitNorm, unitTang
+    else:
+        return data
+
+# module to calculate panel problem
+def panelMethod(geometries, Uinf=0, Winf=0, data=None):
+    ''' Calculates the induced velocites for a given geometries or data
+    
+    sourceTerm(geometries,Uinf,Winf,data) -> data
+    
+    Parameters
+    ---------
+    geometries: dictionary of geometries
+        Key:
+            name of geometry\n
+        Content:
+            array of x, y coordinates in row 0 and 1 respectively\n
+        
+    Uinf, Winf (optional): Freestream velocity, optional else zero.
+        Uinf:
+            Freestream, in x-axis\n
+        Winf:
+            Freestream, in y-axis\n
+        
+    data [optional]: data from .sourceTerm can be provided if already calculated
+        data.points
+        ...
+        ...
+        data.Sigma
+        
+    Returns
+    -------
+    data: 'data' class containing all the data (row 0 = x-axis, row 1 = y-axis)
+        data.points: 
+            all the points\n
+        data.unitVectors (.norm, .tang):
+            the unit vectors of panel\n
+        data.controlPoints:
+            all the control points (mid-point of panel)\n
+        data.panel (.start, .end):
+            split the panel points to start and end\n
+        data.Sigma:
+            source term of the problem\n
+        
+        &&
+        
+        Induced Velocity at control point
+        
+        data.Q:
+            induced velocity (row 0 = x-axis, row 1 = y-axis)
+        data.Qtang:
+            induced velocity, tangential to panel
+        data.Qnorm:
+            induced velocity, normal to panel
+        data.Qres:
+            induced velocity, resultant
+    '''
+
+    # Determining if sigma needs to be calculated    
+    if data is None:
+        # no data available, so sourceTerm module used to calculate the terms
+        data, controlPoints, panelEnd, panelStart, Sigma, unitNorm, unitTang = sourceTerm(geometries, Uinf, Winf, calc_inducedVelocity=True)
+    else:
+        # already have data
+        controlPoints, panelEnd, panelStart, unitNorm, unitTang = reshapeData(data) # reshaping data
+        # reshaping Sigma
+        Sigma = array([])
+        for num in range(len(data)):
+            Sigma = concatenate((Sigma,data[data.keys()[num]].Sigma),axis=0)
+    
+    # Reshaping the Sigma data
+    Sigma = tile(Sigma,[shape(controlPoints.x)[0],1])
+
+    #Induced Velocity at control point
+    u,w = sor2D(Sigma, (controlPoints.x,controlPoints.y), (panelStart.x, panelStart.y), (panelEnd.x, panelEnd.y))
+    
+    Q   = concatenate(([sum(u,axis=1)],[sum(w,axis=1)])) + array([[Uinf],[Winf]]) 
+    Qt  = Q[0,:]*unitTang.x[:,0] + Q[1,:]*unitTang.y[:,0] # tangential velocity
+    Qn  = Q[0,:]*unitNorm.x[:,0] + Q[1,:]*unitNorm.y[:,0] # normal velocity
+    Qres = sqrt(pow(Q[0,:],2) + pow(Q[1,:],2)) # resultant velocity
+    
+    # Storing the data to data[].Q, .Qtang, .Qnorm, .Qres
+    start = 0
+    for num in range(len(data)):
+        end = shape(data[data.keys()[num]].controlPoints)[1]
+        data[data.keys()[num]].__setattr__('Q', Q[:,start:(start+end)])
+        data[data.keys()[num]].__setattr__('Qtang', Qt[start:(start+end)])
+        data[data.keys()[num]].__setattr__('Qnorm', Qn[start:(start+end)])
+        data[data.keys()[num]].__setattr__('Qres', Qres[start:(start+end)])
+        start = end
     
     return data
 
+# to be written: work in progress
+#def inducedVelocities(object):
+#    pass
 ############################################################################
 # List of classes 
 class dataClass(object):
@@ -175,11 +314,6 @@ def reshapeData(object):
     unitTang.y = tile(array([unitTang.y]).transpose(),[1,M])
        
     return controlPoints, panelEnd, panelStart, unitNorm, unitTang
-
-        
-
-
-
 
 ############################################################################
 # module to calculate the source term
