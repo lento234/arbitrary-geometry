@@ -19,6 +19,13 @@ def sourceTerm(geometries):
     # Initially arranging and organizing the data
     data = organizeData(geometries)
     
+    controlPoints, panelEnd, panelStart, unitNorm, unitTang = reshapeData(data)
+    
+    print controlPoints.x, controlPoints.y
+    print panelEnd.x, panelEnd.y
+    print panelStart.x, panelStart.y
+    print unitNorm.x, unitNorm.y
+    print unitTang.x, unitTang.y
     
     return data
 
@@ -116,10 +123,58 @@ def organizeData(object):
         
     return data
     
-def concatenateData(object):
-    pass
-    return object    
+def reshapeData(object):
+    '''Reshape the data and concatenate to one matrix, tile to right format
+    
+    Parameters
+    ----------
+    reshapeData(data) ->
+        controlPoints, panelEnd, panelStart, unitNorm, unitTang
+    
+    '''
+    
+    controlPoints   = Geometry(array([]),array([]))
+    panelStart      = Geometry(array([]),array([]))
+    panelEnd        = Geometry(array([]),array([]))
+    unitNorm        = Geometry(array([]),array([]))
+    unitTang        = Geometry(array([]),array([]))
+    
+    # concatenating all the data to one matrix
+    for num in range(len(object)):
+        controlPoints.x = concatenate((controlPoints.x, object[object.keys()[num]].controlPoints[0]),axis=0)
+        controlPoints.y = concatenate((controlPoints.y, object[object.keys()[num]].controlPoints[1]),axis=0)
+    
+        panelStart.x = concatenate((panelStart.x, object[object.keys()[num]].panel.start[0]),axis=0)    
+        panelStart.y = concatenate((panelStart.y, object[object.keys()[num]].panel.start[1]),axis=0)
 
+        panelEnd.x = concatenate((panelEnd.x, object[object.keys()[num]].panel.end[0]),axis=0)    
+        panelEnd.y = concatenate((panelEnd.y, object[object.keys()[num]].panel.end[1]),axis=0)
+    
+        unitNorm.x = concatenate((unitNorm.x, object[object.keys()[num]].unitVectors.norm[0]),axis=0)
+        unitNorm.y = concatenate((unitNorm.y, object[object.keys()[num]].unitVectors.norm[1]),axis=0)
+    
+        unitTang.x = concatenate((unitTang.x, object[object.keys()[num]].unitVectors.tang[0]),axis=0)
+        unitTang.y = concatenate((unitTang.y, object[object.keys()[num]].unitVectors.tang[1]),axis=0)
+        
+    N = len(controlPoints.x) # total number of control points
+    M = len(panelStart.x) # total number of panel points
+    
+    controlPoints.x = tile(array([controlPoints.x]).transpose(),[1,M])
+    controlPoints.y = tile(array([controlPoints.y]).transpose(),[1,M])
+    
+    panelStart.x = tile(panelStart.x,[N,1])
+    panelStart.y = tile(panelStart.y,[N,1])
+    
+    panelEnd.x = tile(panelEnd.x,[N,1])
+    panelEnd.y = tile(panelEnd.y,[N,1])
+    
+    unitNorm.x = tile(array([unitNorm.x]).transpose(),[1,M])
+    unitNorm.y = tile(array([unitNorm.y]).transpose(),[1,M])
+    
+    unitTang.x = tile(array([unitTang.x]).transpose(),[1,M])
+    unitTang.y = tile(array([unitTang.y]).transpose(),[1,M])
+       
+    return controlPoints, panelEnd, panelStart, unitNorm, unitTang
 
         
 
