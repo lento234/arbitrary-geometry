@@ -16,7 +16,7 @@ from numpy import *
 #from Vort2D import *
 #from unitVec import *
 
-from multipleGeometry import sourceTerm
+import multipleGeometry
 
      
 # Control Parameters
@@ -33,7 +33,7 @@ Geometries = {'a':array([[-1.0,-0.75,-0.5,-0.75,-1.0], # x-coordinate
                          [0.0,0.25,0.0,-0.25,0.0]])}
 
 
-data = sourceTerm(Geometries)
+data = multipleGeometry.sourceTerm(Geometries)
 
 
 # Defining Geometry      

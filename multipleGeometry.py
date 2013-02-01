@@ -13,28 +13,17 @@ from numpy import *
 
 ############################################################################
 
+# module to calculate the source term (only)
 def sourceTerm(geometries):
     
-    data = {}
-    for name in geometries:
-        data[name] = dataClass() # empty data class
-        # saving x and y data points into .points                
-        data[name].__setattr__('points',geometries[name])
-        data[name].__setattr__('unitVectors',dataClass())
-        data[name].__setattr__('controlPoints',dataClass())
-        data[name].__setattr__('panel',dataClass())
-        
-        calc_unitVectors(data[name]) # calculate unitVectors
-        calc_controlPoints(data[name]) # calculate control points
-        calc_panelPoints(data[name])
+    # Initially arranging and organizing the data
+    data = organizeData(geometries)
     
-        
-
     
     return data
 
-############################################################################    
-
+############################################################################
+# List of classes 
 class dataClass(object):
     '''Generates an empty class    
     '''
@@ -44,17 +33,23 @@ class dataClass(object):
 class Geometry(object):
     '''Geometry Class. Defines the name, x and y coordinates
     
-    Geometry(object) -> object.x, object.y
-    
+    Parameters
+    ----------
+    Geometry(object) -> 
+        object.x, object.y
     '''
     def __init__(self,x,y):
         self.x = x
         self.y = y
 
+# List of functions
 def calc_unitVectors(object):
-    '''Calculates the unit vectors of the geometry (object)\n
+    '''Calculates the unit vectors of the geometry (object)
     
-    calc_unitVectors(object) -> object.unitNorm, object.unitTang
+    Parameters
+    ----------    
+    calc_unitVectors(object) -> 
+        object.unitVectors.norm, object.unitVectors.tang
     '''
     
     norm = normVec((object.points[0,:-1],object.points[1,:-1]),(object.points[0,1:],object.points[1,1:]))
@@ -66,9 +61,12 @@ def calc_unitVectors(object):
     return object
     
 def calc_controlPoints(object):
-    '''Generates the control points\n
+    '''Generates the control points
     
-    calc_controlPoints(object) -> object.controlPoints.x, object.controlPoints.y
+    Parameters
+    ----------    
+    calc_controlPoints(object) ->
+        object.controlPoints
     '''
    
     #cpx = (object.points[0][1:] + object.points[0][:-1])/2 + 100*object.unitVectors.norm[0]*finfo(float).eps
@@ -82,13 +80,51 @@ def calc_controlPoints(object):
 def calc_panelPoints(object):
     '''Generates the panel starting and end points
     
-    calc_panelPoints(object) -> object.panelStart(.x,.y), object.panelEnd(.x,.y)        
+    Parameters
+    ----------    
+    calc_panelPoints(object) -> 
+        object.panel.start, object.panel.end
     '''
     
     object.panel.start = object.points[:,:-1]
     object.panel.end = object.points[:,1:]
     
     return object
+
+def organizeData(object):
+    '''Method to organize the inital data\n
+    
+    Parameters
+    ----  
+    organizeData(geometries) -> 
+        data (.points, .unitVectors, .controlPoints, .panel (.start, .end))
+    '''
+    data = {}
+    for name in object:
+        data[name] = dataClass() # empty data class
+        
+        data[name].__setattr__('points',object[name]) # saving x and y data points into .points  
+        
+        # empty classes
+        data[name].__setattr__('unitVectors',dataClass())
+        data[name].__setattr__('controlPoints',dataClass())
+        data[name].__setattr__('panel',dataClass())
+        
+        calc_unitVectors(data[name]) # calculate unitVectors
+        calc_controlPoints(data[name]) # calculate control points
+        calc_panelPoints(data[name])
+        
+    return data
+    
+def concatenateData(object):
+    pass
+    return object    
+
+
+        
+
+
+
 
 ############################################################################
 # module to calculate the source term
@@ -125,6 +161,7 @@ def sor2D(sigma,controlPoint,panelStart,panelEnd):
        
     return u,w
     
+# calculate the normal vector
 def normVec(start,end):
     ''' Description: Finds the normal vector of a line
     
@@ -154,6 +191,7 @@ def normVec(start,end):
 
     return norm
 
+# calculate the tangential vector
 def tangVec(start,end):
     ''' Description: Finds the tangential vector of a line
     
@@ -181,20 +219,22 @@ def tangVec(start,end):
     tang = concatenate(([cosAlpha],[sinAlpha]))
     
     return tang
-    
+
+# transformation module, from global to panel geometry
 def global2panel(point,origin,end):
-    '''Description: Transforms Global coordinates to Panel coordinates, Eq(11.23a)
+    '''Transforms Global coordinates to Panel coordinates, Eq(11.23a)
   
-    Parameters: points to transform, assosciating origin point, end point
-      array containing x,y coordinates in
+    Parameters
+    ----------
+    points to transform, assosciating origin point, end point array containing x,y coordinates in
     
-      Shape: meshgrid (no. of points by no. of panels)
+    Shape: meshgrid (no. of points by no. of panels)
     
-    Returns: points in panel coordinate
-      array containing x,y coorinates in variable xp and yp
+    Returns
+    -------
+    points in panel coordinate array containing x,y coorinates in variable xp and yp
     
-      Shape: meshgrid (no. of points by no. of panels)
-  
+    Shape: meshgrid (no. of points by no. of panels)  
     '''	
     
     # Parameters
@@ -212,19 +252,21 @@ def global2panel(point,origin,end):
     
     return xp,yp
     
+# to transfer velocity from panel to global geometry
 def panel2global(velocityPanel,origin,end):
-    '''Description: Transforms panel velocity component to global direction 
+    '''Transforms panel velocity component to global direction 
     
-    Parameters: velocity component in panel axis, origin of panel, end of panel
-        array containing x,y component in velocityPanel
+    Parameters
+    ----------
+    velocity component in panel axis, origin of panel, end of panel array containing x,y component in velocityPanel
         
-        Shape: meshgrid (no. of points by no. of panels)
+    Shape: meshgrid (no. of points by no. of panels)
         
-    Returns: velocity component in global axis
-        array containing u and w globabl velocity component
+    Returns
+    -------
+    velocity component in global axis array containing u and w globabl velocity component
         
-        Shape: meshgrid (no. of points by no. of panels)
-    
+    Shape: meshgrid (no. of points by no. of panels)
     '''
  
     # Variable definitions
