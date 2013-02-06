@@ -11,71 +11,6 @@ from numpy import *
 
 ############################################################################
 
-# module to calculate the source term (only)
-def sourceTerm(geometries, Uinf=0, Winf=0, calc_inducedVelocity = False):
-    ''' Calculates the source term for a given geometries
-    
-    sourceTerm(geometries,Uinf,Winf) -> data
-    
-    Parameters
-    ---------
-    geometries: dictionary of geometries
-        Key:
-            name of geometry\n
-        Content:
-            array of x, y coordinates in row 0 and 1 respectively\n
-        
-    Uinf, Winf (optional): Freestream velocity, optional else zero.
-        Uinf:
-            Freestream, in x-axis\n
-        Winf:
-            Freestream, in y-axis\n
-        
-    calc_inducedVelocity [ignore]:
-        
-    Returns
-    -------
-    data: 'data' class containing all the data (row 0 = x-axis, row 1 = y-axis)
-        data.points: 
-            all the points\n
-        data.unitVectors (.norm, .tang):
-            the unit vectors of panel\n
-        data.controlPoints:
-            all the control points (mid-point of panel)\n
-        data.panel (.start, .end):
-            split the panel points to start and end\n
-        data.Sigma:
-            source term of the problem\n
-    '''
-    
-    # Initially arranging and organizing the data
-    data = organizeData(geometries)
-    
-    # Reshapes the data accordingally
-    controlPoints, panelEnd, panelStart, unitNorm, unitTang = reshapeData(data)
-    
-    # Solving the problem
-    sigma = ones(shape(controlPoints.x)) # unit source
-    
-    u,w = sor2D(sigma, (controlPoints.x,controlPoints.y), (panelStart.x, panelStart.y), (panelEnd.x, panelEnd.y))
-    A   = u*unitNorm.x + w*unitNorm.y
-    RHS = -(Uinf*unitNorm.x[:,0] + Winf*unitNorm.y[:,0])
-    
-    Sigma = linalg.solve(A,RHS)
-    
-    # Storing the data to data[].Sigma
-    start = 0
-    for num in range(len(data)):
-        end = shape(data[data.keys()[num]].controlPoints)[1]
-        data[data.keys()[num]].__setattr__('Sigma',Sigma[start:(start+end)])
-        start = end
-    
-    # returning the data, either to inducedVelocities method or normal     
-    if calc_inducedVelocity == True:
-        return data, controlPoints, panelEnd, panelStart, Sigma, unitNorm, unitTang
-    else:
-        return data
-
 # module to calculate panel problem
 def panelMethod(geometries, Uinf=0, Winf=0, data=None):
     ''' Calculates the induced velocites for a given geometries or data
@@ -165,9 +100,93 @@ def panelMethod(geometries, Uinf=0, Winf=0, data=None):
     
     return data
 
+# module to calculate the source term (only)
+def sourceTerm(geometries, Uinf=0, Winf=0):# calc_inducedVelocity = False):
+    ''' Calculates the source term for a given geometries
+    
+    sourceTerm(geometries,Uinf,Winf) -> data
+    
+    Parameters
+    ---------
+    geometries: dictionary of geometries
+        Key:
+            name of geometry\n
+        Content:
+            array of x, y coordinates in row 0 and 1 respectively\n
+        
+    Uinf, Winf (optional): Freestream velocity, optional else zero.
+        Uinf:
+            Freestream, in x-axis\n
+        Winf:
+            Freestream, in y-axis\n
+        
+    calc_inducedVelocity [ignore]:
+        
+    Returns
+    -------
+    data: 'data' class containing all the data (row 0 = x-axis, row 1 = y-axis)
+        data.points: 
+            all the points\n
+        data.unitVectors (.norm, .tang):
+            the unit vectors of panel\n
+        data.controlPoints:
+            all the control points (mid-point of panel)\n
+        data.panel (.start, .end):
+            split the panel points to start and end\n
+        data.Sigma:
+            source term of the problem\n
+    '''
+    
+    # Initially arranging and organizing the data
+    data = organizeData(geometries)
+    
+    # Reshapes the data accordingally
+    controlPoints, panelEnd, panelStart, sigma, unitNorm, unitTang = reshapeData2Solve(data)
+    
+    #sigma = ones(shape(controlPoints.x)) # unit source
+    
+    # Solving the problem
+    u,w = sor2D(sigma, (controlPoints.x, controlPoints.y), (panelStart.x, panelStart.y), (panelEnd.x, panelEnd.y))
+    A   = u*unitNorm.x + w*unitNorm.y
+    RHS = -(Uinf*unitNorm.x[:,0] + Winf*unitNorm.y[:,0])
+    
+    Sigma = linalg.solve(A,RHS)
+    
+    # Storing the data to data[].Sigma
+    start = 0
+    for num in range(len(data)):
+        end = shape(data[data.keys()[num]].controlPoints)[1]
+        data[data.keys()[num]].__setattr__('Sigma',Sigma[start:(start+end)])
+        start = end
+    
+    # returning the data, either to inducedVelocities method or normal     
+    #if calc_inducedVelocity == True:
+    #    return data, controlPoints, panelEnd, panelStart, Sigma, unitNorm, unitTang
+    #else:
+    return data
+
 # to be written: work in progress
-#def inducedVelocities(object):
-#    pass
+def inducedVelocities(geometries, collocationPointsX=None, collocationPointsY=None, Uinf=0., Winf=0., data=None):
+    '''Calculated induced velocities of any points
+
+    '''
+    
+    # Solve for sigma and other terms to 
+    if data == None:
+        data = sourceTerm(geometries, Uinf, Winf)
+    
+    # reshape Data for calculation
+    controlPoints, panelEnd, panelStart, Sigma, unitNorm, unitTang = reshapeData2Calc(data, collocationPointsX, collocationPointsY)
+  
+    # Solving for induction
+    u,w = sor2D(Sigma, (controlPoints.x, controlPoints.y), (panelStart.x, panelStart.y), (panelEnd.x,panelEnd.y))
+    
+    Qx = sum(u,axis=0) + Uinf
+    Qy = sum(w,axis=0) + Winf
+    Qres = sqrt(pow(Qx,2) + pow(Qy,2))
+
+    return data, Qx, Qy, Qres 
+
 ############################################################################
 # List of classes 
 class dataClass(object):
@@ -262,7 +281,7 @@ def organizeData(object):
         
     return data
     
-def reshapeData(object):
+def reshapeData2Solve(object):
     '''Reshape the data and concatenate to one matrix, tile to right format
     
     Parameters
@@ -312,9 +331,68 @@ def reshapeData(object):
     
     unitTang.x = tile(array([unitTang.x]).transpose(),[1,M])
     unitTang.y = tile(array([unitTang.y]).transpose(),[1,M])
-       
-    return controlPoints, panelEnd, panelStart, unitNorm, unitTang
+    
+    #Calculating the unit sigma
+    sigma = ones(shape(controlPoints.x)) # unit source
 
+    return controlPoints, panelEnd, panelStart, sigma, unitNorm, unitTang
+    
+def reshapeData2Calc(object, collocationPointsX, collocationPointsY):
+    ''' Reshape the data to calculate the induced velocity
+    
+    '''
+    
+    controlPoints   = Geometry(array([]),array([]))
+    panelStart      = Geometry(array([]),array([]))
+    panelEnd        = Geometry(array([]),array([]))
+    unitNorm        = Geometry(array([]),array([]))
+    unitTang        = Geometry(array([]),array([]))
+    Sigma           = array([])
+    
+    # concatenating all the data to one matrix
+    for num in range(len(object)):       
+        if collocationPointsX == None:            
+            controlPoints.x = concatenate((controlPoints.x, object[object.keys()[num]].controlPoints[0]), axis=0)
+            controlPoints.y = concatenate((controlPoints.y, object[object.keys()[num]].controlPoints[1]), axis=0)
+            
+        unitNorm.x = concatenate((unitNorm.x, object[object.keys()[num]].unitVectors.norm[0]), axis=0)
+        unitNorm.y = concatenate((unitNorm.y, object[object.keys()[num]].unitVectors.norm[1]), axis=0)
+    
+        unitTang.x = concatenate((unitTang.x, object[object.keys()[num]].unitVectors.tang[0]),axis=0)
+        unitTang.y = concatenate((unitTang.y, object[object.keys()[num]].unitVectors.tang[1]),axis=0)
+    
+        panelStart.x = concatenate((panelStart.x, object[object.keys()[num]].panel.start[0]), axis=0)    
+        panelStart.y = concatenate((panelStart.y, object[object.keys()[num]].panel.start[1]), axis=0)
+
+        panelEnd.x = concatenate((panelEnd.x, object[object.keys()[num]].panel.end[0]), axis=0)    
+        panelEnd.y = concatenate((panelEnd.y, object[object.keys()[num]].panel.end[1]), axis=0)
+    
+        Sigma = concatenate((Sigma, object[object.keys()[num]].Sigma), axis=0)
+        
+    #N = len(controlPoints.x) # total number of control points
+    M = len(panelStart.x) # total number of panel points
+    
+    # Generating points
+    if collocationPointsX == None:
+        controlPoints.x = tile(controlPoints.x, [M,1,1])
+        controlPoints.y = tile(controlPoints.y, [M,1,1])
+    else:
+        controlPoints.x = tile(collocationPointsX, [M,1,1])
+        controlPoints.y = tile(collocationPointsY, [M,1,1])
+    
+    cpShape = shape(controlPoints.x) # Shape of the collocation point
+
+    panelStart.x = tile(reshape(panelStart.x, (M,1,1)), [1,cpShape[1], cpShape[2]])
+    panelStart.y = tile(reshape(panelStart.y, (M,1,1)), [1,cpShape[1], cpShape[2]])
+    
+    panelEnd.x = tile(reshape(panelEnd.x, (M,1,1)), [1,cpShape[1], cpShape[2]])
+    panelEnd.y = tile(reshape(panelEnd.y, (M,1,1)), [1,cpShape[1], cpShape[2]])
+    
+    Sigma = tile(reshape(Sigma, (M,1,1)), [1, cpShape[1], cpShape[2]])
+    
+    return controlPoints, panelEnd, panelStart, Sigma, unitNorm, unitTang
+    
+    
 ############################################################################
 # module to calculate the source term
 def sor2D(sigma,controlPoint,panelStart,panelEnd):

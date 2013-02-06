@@ -59,3 +59,9 @@ Files Include:
 External Modules:
 - numpy
 
+Future Work:
+===========
+
+- include calculation of induction to random field of control points, if geometries and source strengths are known. [work level = 5]
+- include calculation of random vortex field vortex field. [work level = 8]
+
