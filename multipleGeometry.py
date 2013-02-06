@@ -143,8 +143,6 @@ def sourceTerm(geometries, Uinf=0, Winf=0):# calc_inducedVelocity = False):
     # Reshapes the data accordingally
     controlPoints, panelEnd, panelStart, sigma, unitNorm, unitTang = reshapeData2Solve(data)
     
-    #sigma = ones(shape(controlPoints.x)) # unit source
-    
     # Solving the problem
     u,w = sor2D(sigma, (controlPoints.x, controlPoints.y), (panelStart.x, panelStart.y), (panelEnd.x, panelEnd.y))
     A   = u*unitNorm.x + w*unitNorm.y
@@ -154,19 +152,16 @@ def sourceTerm(geometries, Uinf=0, Winf=0):# calc_inducedVelocity = False):
     
     # Storing the data to data[].Sigma
     start = 0
-    for num in range(len(data)):
-        end = shape(data[data.keys()[num]].controlPoints)[1]
-        data[data.keys()[num]].__setattr__('Sigma',Sigma[start:(start+end)])
+    data.__setattr__('Sigma', {})
+    for name in data.geometries:
+        end = shape(data.controlPoints[name])[1]
+        data.Sigma[name] = Sigma[start: (start + end)]
         start = end
-    
-    # returning the data, either to inducedVelocities method or normal     
-    #if calc_inducedVelocity == True:
-    #    return data, controlPoints, panelEnd, panelStart, Sigma, unitNorm, unitTang
-    #else:
+        
     return data
 
 # to be written: work in progress
-def inducedVelocities(geometries, collocationPointsX=None, collocationPointsY=None, Uinf=0., Winf=0., data=None):
+def inducedVelocities(geometries, collocationPointsX='self', collocationPointsY='self', Uinf=0., Winf=0., data=None):
     '''Calculated induced velocities of any points
 
     '''
@@ -181,20 +176,46 @@ def inducedVelocities(geometries, collocationPointsX=None, collocationPointsY=No
     # Solving for induction
     u,w = sor2D(Sigma, (controlPoints.x, controlPoints.y), (panelStart.x, panelStart.y), (panelEnd.x,panelEnd.y))
     
+    # Summing the induction velocities
     Qx = sum(u,axis=0) + Uinf
     Qy = sum(w,axis=0) + Winf
     Qres = sqrt(pow(Qx,2) + pow(Qy,2))
     
     # Storing the data to data[].Q, .Qtang, .Qnorm, .Qres
-    #data[data.keys()[num]].__setattr__('Q', Q[:,start:(start+end)])
-    #data[data.keys()[num]].__setattr__('Qtang', Qt[start:(start+end)])
-    #data[data.keys()[num]].__setattr__('Qnorm', Qn[start:(start+end)])
-    #data[data.keys()[num]].__setattr__('Qres', Qres[start:(start+end)])
+    if collocationPointsX == 'self':
+        # If collocation point on body itself
+        data.__setattr__('Qx', {})
+        data.__setattr__('Qy', {})
+        data.__setattr__('Qtang', {}) # unique to self solving
+        data.__setattr__('Qnorm', {}) # unique to self solving
+        data.__setattr__('Qres', {})
+        
+        Qtang  = Qx*unitTang.x + Qy*unitTang.y # tangential velocity
+        Qnorm  = Qx*unitNorm.x + Qy*unitNorm.y # normal velocity
+        
+        start = 0
+        for name in data.geometries:
+            end = shape(data.controlPoints[name])[1]
+            
+            data.Qx[name]       = Qx[start: (start + end)]
+            data.Qy[name]       = Qy[start: (start + end)]
+            data.Qres[name]     = Qres[start: (start + end)]
+            data.Qtang[name]    = Qtang[start: (start + end)]
+            data.Qnorm[name]    = Qnorm[start: (start + end)]
+
+            start = end
     
-    return data, Qx, Qy, Qres 
+    else:
+        data.__setattr__('Qx', Qx)
+        data.__setattr__('Qy', Qy)
+        data.__setattr__('Qres', Qres)
+    
+    return data 
 
 ############################################################################
-# List of classes 
+#LIST OF DATA MANIPULATION MODULES
+
+# Empty class generation module 
 class dataClass(object):
     '''Generates an empty class    
     '''
@@ -213,77 +234,36 @@ class Geometry(object):
         self.x = x
         self.y = y
 
-# List of functions
-def calc_unitVectors(object):
-    '''Calculates the unit vectors of the geometry (object)
-    
-    Parameters
-    ----------    
-    calc_unitVectors(object) -> 
-        object.unitVectors.norm, object.unitVectors.tang
-    '''
-    
-    norm = normVec((object.points[0,:-1],object.points[1,:-1]),(object.points[0,1:],object.points[1,1:]))
-    tang = tangVec((object.points[0,:-1],object.points[1,:-1]),(object.points[0,1:],object.points[1,1:]))
-    
-    object.unitVectors.norm = norm 
-    object.unitVectors.tang = tang
-    
-    return object
-    
-def calc_controlPoints(object):
-    '''Generates the control points
-    
-    Parameters
-    ----------    
-    calc_controlPoints(object) ->
-        object.controlPoints
-    '''
-   
-    #cpx = (object.points[0][1:] + object.points[0][:-1])/2 + 100*object.unitVectors.norm[0]*finfo(float).eps
-    #cpy = (object.points[1][1:] + object.points[1][:-1])/2 + 100*object.unitVectors.norm[1]*finfo(float).eps
-    
-    cp = add((object.points[:,1:] + object.points[:,:-1])/2, 100*object.unitVectors.norm*finfo(float).eps) # control points pushed out by delta eps
-    object.controlPoints = cp
-    
-    return object
-    
-def calc_panelPoints(object):
-    '''Generates the panel starting and end points
-    
-    Parameters
-    ----------    
-    calc_panelPoints(object) -> 
-        object.panel.start, object.panel.end
-    '''
-    
-    object.panel.start = object.points[:,:-1]
-    object.panel.end = object.points[:,1:]
-    
-    return object
-
 def organizeData(object):
-    '''Method to organize the inital data\n
+    ''' organizeData(object) -> data (.points, .unitVectors, .controlPoints, .panel (.start, .end))
     
-    Parameters
-    ----  
-    organizeData(geometries) -> 
-        data (.points, .unitVectors, .controlPoints, .panel (.start, .end))
+    Method to organize the inital data
     '''
-    data = {}
-    for name in object:
-        data[name] = dataClass() # empty data class
-        
-        data[name].__setattr__('points',object[name]) # saving x and y data points into .points  
-        
-        # empty classes
-        data[name].__setattr__('unitVectors',dataClass())
-        data[name].__setattr__('controlPoints',dataClass())
-        data[name].__setattr__('panel',dataClass())
-        
-        calc_unitVectors(data[name]) # calculate unitVectors
-        calc_controlPoints(data[name]) # calculate control points
-        calc_panelPoints(data[name])
+    
+    # Creating and empty class    
+    data = dataClass()
+    
+    data.__setattr__('length', len(object))
+    data.__setattr__('geometries', object.keys())
+    
+    data.__setattr__('points', object) # Storing the geometry points
+    
+    data.__setattr__('unitVectors', dataClass()) # to store norm and tang
+    data.unitVectors.__setattr__('norm', {})
+    data.unitVectors.__setattr__('tang', {})
+    
+    data.__setattr__('controlPoints', {})
+    
+    data.__setattr__('panel', dataClass())
+    data.panel.__setattr__('start', {})
+    data.panel.__setattr__('end', {})
+    
+    for name in data.geometries:            
+        data.panel.start[name], data.panel.end[name] = calc_panelPoints(data.points[name]) # calculate panel points
+
+        data.unitVectors.norm[name] = calc_normVec((data.panel.start[name][0], data.panel.start[name][1]), (data.panel.end[name][0], data.panel.end[name][1]))
+        data.unitVectors.tang[name] = calc_tangVec((data.panel.start[name][0], data.panel.start[name][1]), (data.panel.end[name][0], data.panel.end[name][1]))
+        data.controlPoints[name] = calc_controlPoints(data.panel.start[name], data.panel.end[name], data.unitVectors.norm[name] ) # calculate control points
         
     return data
     
@@ -304,21 +284,21 @@ def reshapeData2Solve(object):
     unitTang        = Geometry(array([]),array([]))
     
     # concatenating all the data to one matrix
-    for num in range(len(object)):
-        controlPoints.x = concatenate((controlPoints.x, object[object.keys()[num]].controlPoints[0]),axis=0)
-        controlPoints.y = concatenate((controlPoints.y, object[object.keys()[num]].controlPoints[1]),axis=0)
+    for name in object.geometries:
+        controlPoints.x = concatenate((controlPoints.x, object.controlPoints[name][0]),axis=0)
+        controlPoints.y = concatenate((controlPoints.y, object.controlPoints[name][1]),axis=0)
     
-        panelStart.x = concatenate((panelStart.x, object[object.keys()[num]].panel.start[0]),axis=0)    
-        panelStart.y = concatenate((panelStart.y, object[object.keys()[num]].panel.start[1]),axis=0)
+        panelStart.x = concatenate((panelStart.x, object.panel.start[name][0]),axis=0)    
+        panelStart.y = concatenate((panelStart.y, object.panel.start[name][1]),axis=0)
 
-        panelEnd.x = concatenate((panelEnd.x, object[object.keys()[num]].panel.end[0]),axis=0)    
-        panelEnd.y = concatenate((panelEnd.y, object[object.keys()[num]].panel.end[1]),axis=0)
+        panelEnd.x = concatenate((panelEnd.x, object.panel.end[name][0]),axis=0)    
+        panelEnd.y = concatenate((panelEnd.y, object.panel.end[name][1]),axis=0)
     
-        unitNorm.x = concatenate((unitNorm.x, object[object.keys()[num]].unitVectors.norm[0]),axis=0)
-        unitNorm.y = concatenate((unitNorm.y, object[object.keys()[num]].unitVectors.norm[1]),axis=0)
+        unitNorm.x = concatenate((unitNorm.x, object.unitVectors.norm[name][0]),axis=0)
+        unitNorm.y = concatenate((unitNorm.y, object.unitVectors.norm[name][1]),axis=0)
     
-        unitTang.x = concatenate((unitTang.x, object[object.keys()[num]].unitVectors.tang[0]),axis=0)
-        unitTang.y = concatenate((unitTang.y, object[object.keys()[num]].unitVectors.tang[1]),axis=0)
+        unitTang.x = concatenate((unitTang.x, object.unitVectors.tang[name][0]),axis=0)
+        unitTang.y = concatenate((unitTang.y, object.unitVectors.tang[name][1]),axis=0)
         
     N = len(controlPoints.x) # total number of control points
     M = len(panelStart.x) # total number of panel points
@@ -344,8 +324,9 @@ def reshapeData2Solve(object):
     return controlPoints, panelEnd, panelStart, sigma, unitNorm, unitTang
     
 def reshapeData2Calc(object, collocationPointsX, collocationPointsY):
-    ''' Reshape the data to calculate the induced velocity
+    ''' reshapeData2Calc(object, collocationPointsX, collocationPointsY) -> 
     
+    Reshape the data to calculate the induced velocity    
     '''
     
     controlPoints   = Geometry(array([]),array([]))
@@ -356,32 +337,39 @@ def reshapeData2Calc(object, collocationPointsX, collocationPointsY):
     Sigma           = array([])
     
     # concatenating all the data to one matrix
-    for num in range(len(object)):       
-        if collocationPointsX == None:            
-            controlPoints.x = concatenate((controlPoints.x, object[object.keys()[num]].controlPoints[0]), axis=0)
-            controlPoints.y = concatenate((controlPoints.y, object[object.keys()[num]].controlPoints[1]), axis=0)
+    for name in object.geometries:       
+        if collocationPointsX == 'self':            
+            controlPoints.x = concatenate((controlPoints.x, object.controlPoints[name][0]), axis=0)
+            controlPoints.y = concatenate((controlPoints.y, object.controlPoints[name][1]), axis=0)
             
-        unitNorm.x = concatenate((unitNorm.x, object[object.keys()[num]].unitVectors.norm[0]), axis=0)
-        unitNorm.y = concatenate((unitNorm.y, object[object.keys()[num]].unitVectors.norm[1]), axis=0)
+        unitNorm.x = concatenate((unitNorm.x, object.unitVectors.norm[name][0]), axis=0)
+        unitNorm.y = concatenate((unitNorm.y, object.unitVectors.norm[name][1]), axis=0)
     
-        unitTang.x = concatenate((unitTang.x, object[object.keys()[num]].unitVectors.tang[0]),axis=0)
-        unitTang.y = concatenate((unitTang.y, object[object.keys()[num]].unitVectors.tang[1]),axis=0)
+        unitTang.x = concatenate((unitTang.x, object.unitVectors.tang[name][0]),axis=0)
+        unitTang.y = concatenate((unitTang.y, object.unitVectors.tang[name][1]),axis=0)
     
-        panelStart.x = concatenate((panelStart.x, object[object.keys()[num]].panel.start[0]), axis=0)    
-        panelStart.y = concatenate((panelStart.y, object[object.keys()[num]].panel.start[1]), axis=0)
+        panelStart.x = concatenate((panelStart.x, object.panel.start[name][0]), axis=0)    
+        panelStart.y = concatenate((panelStart.y, object.panel.start[name][1]), axis=0)
 
-        panelEnd.x = concatenate((panelEnd.x, object[object.keys()[num]].panel.end[0]), axis=0)    
-        panelEnd.y = concatenate((panelEnd.y, object[object.keys()[num]].panel.end[1]), axis=0)
+        panelEnd.x = concatenate((panelEnd.x, object.panel.end[name][0]), axis=0)    
+        panelEnd.y = concatenate((panelEnd.y, object.panel.end[name][1]), axis=0)
     
-        Sigma = concatenate((Sigma, object[object.keys()[num]].Sigma), axis=0)
+        Sigma = concatenate((Sigma, object.Sigma[name]), axis=0)
         
     #N = len(controlPoints.x) # total number of control points
     M = len(panelStart.x) # total number of panel points
-    
+        
     # Generating points
-    if collocationPointsX == None:
+    if collocationPointsX == 'self':
         controlPoints.x = tile(controlPoints.x, [M,1,1])
         controlPoints.y = tile(controlPoints.y, [M,1,1])
+        
+        unitNorm.x = tile(unitNorm.x, [M,1,1])
+        unitNorm.y = tile(unitNorm.y, [M,1,1])
+    
+        unitTang.x = tile(unitTang.x, [M,1,1])
+        unitTang.y = tile(unitTang.y, [M,1,1])
+        
     else:
         controlPoints.x = tile(collocationPointsX, [M,1,1])
         controlPoints.y = tile(collocationPointsY, [M,1,1])
@@ -393,16 +381,20 @@ def reshapeData2Calc(object, collocationPointsX, collocationPointsY):
     
     panelEnd.x = tile(reshape(panelEnd.x, (M,1,1)), [1,cpShape[1], cpShape[2]])
     panelEnd.y = tile(reshape(panelEnd.y, (M,1,1)), [1,cpShape[1], cpShape[2]])
-    
+        
     Sigma = tile(reshape(Sigma, (M,1,1)), [1, cpShape[1], cpShape[2]])
     
     return controlPoints, panelEnd, panelStart, Sigma, unitNorm, unitTang
     
     
 ############################################################################
+# LIST OF CALCULATION MODULES
+
 # module to calculate the source term
-def sor2D(sigma,controlPoint,panelStart,panelEnd):
-    '''Description: Constant Strength Source Method\n
+def sor2D(sigma, controlPoint, panelStart, panelEnd):
+    ''' sor2D(sigma, controlPoints, panelStart, panelEnd) -> u, w
+    
+    Description: Constant Strength Source Method
     
     Parameters: source strength, control points, panel starting point, end point
         array of x,y coordinates in row 1 and 2 respectively
@@ -413,7 +405,7 @@ def sor2D(sigma,controlPoint,panelStart,panelEnd):
     Shape n by m
     
     '''
-               
+
     # In panel coordinates (from global coordinates)
     x,y     = global2panel(controlPoint,panelStart,panelEnd) # control point
     x1,y1   = global2panel(panelStart,panelStart,panelEnd) # panel origin 
@@ -433,10 +425,31 @@ def sor2D(sigma,controlPoint,panelStart,panelEnd):
     u,w = panel2global((up,wp),panelStart,panelEnd)
        
     return u,w
+
+def calc_panelPoints(points):
+    ''' calc_panelPoints(points) -> panel start, panel end
     
+    Generates the panel starting and end points
+    '''
+    
+    return points[:,:-1], points[:,1:]
+    
+def calc_controlPoints(start, end, norm):
+    ''' calc_controlPoints(points, norm) -> control points
+    
+    Generates the control points
+    '''
+
+    # control points pushed out by delta eps
+    cp = add((start + end)/2, 100*norm*finfo(float).eps) 
+
+    return cp
+       
 # calculate the normal vector
-def normVec(start,end):
-    ''' Description: Finds the normal vector of a line
+def calc_normVec(panelStart, panelEnd):
+    ''' calc_normVec(start, end) -> norm
+    
+    Description: Finds the normal vector of a line
     
     Parameters: starting point,end point 
       array containing x,y coordinates in row 1 and 2 respectively
@@ -452,21 +465,23 @@ def normVec(start,end):
     '''
     
     # Introducing parameters
-    x1,y1 = start
-    x2,y2 = end
+    x1, y1 = panelStart
+    x2, y2 = panelEnd
     
     r = sqrt((x2-x1)**2 + (y2-y1)**2) #hypotenuse
     
     sinAlpha = (y2-y1)/r
     cosAlpha = (x2-x1)/r
     
-    norm = concatenate(([-sinAlpha],[cosAlpha]))
+    norm = concatenate(([-sinAlpha], [cosAlpha]), axis=0)
 
     return norm
 
 # calculate the tangential vector
-def tangVec(start,end):
-    ''' Description: Finds the tangential vector of a line
+def calc_tangVec(panelStart, panelEnd):
+    ''' calc_tangVec(panelStart, panelEnd) -> tang
+    
+    Description: Finds the tangential vector of a line
     
     Parameters: starting point,end point
       array containing x,y coordinates in row 1 and 2 respectively
@@ -478,24 +493,29 @@ def tangVec(start,end):
       x and y componenent in row 1 and 2 respectively
 
       Shape: 2 by n
-      
     '''
     
     # Introducing parameters
-    x1,y1 = start
-    x2,y2 = end
+    x1, y1 = panelStart
+    x2, y2 = panelEnd
+    
     r = sqrt((x2 - x1)**2 + (y2 - y1)**2) #hypothenuse
 
     cosAlpha = (x2 - x1)/r
     sinAlpha = (y2 - y1)/r
 
-    tang = concatenate(([cosAlpha],[sinAlpha]))
+    tang = concatenate(([cosAlpha], [sinAlpha]))
     
     return tang
+    
+############################################################################
+# TRANSFORMATION MODULES
 
 # transformation module, from global to panel geometry
-def global2panel(point,origin,end):
-    '''Transforms Global coordinates to Panel coordinates, Eq(11.23a)
+def global2panel(point, origin, end):
+    ''' global2panel(point, origin, end) -> xp, yp
+    
+    Transforms Global coordinates to Panel coordinates, Eq(11.23a)
   
     Parameters
     ----------
@@ -523,11 +543,13 @@ def global2panel(point,origin,end):
     xp = cosAlpha*(xG - x1)  + sinAlpha*(yG - y1)
     yp = -sinAlpha*(xG - x1) + cosAlpha*(yG - y1)
     
-    return xp,yp
+    return xp, yp
     
 # to transfer velocity from panel to global geometry
-def panel2global(velocityPanel,origin,end):
-    '''Transforms panel velocity component to global direction 
+def panel2global(velocityPanel, origin, end):
+    '''panel2global(velocityPanel, origin, end) -> u, w
+    
+    Transforms panel velocity component to global direction 
     
     Parameters
     ----------
@@ -543,9 +565,9 @@ def panel2global(velocityPanel,origin,end):
     '''
  
     # Variable definitions
-    up,wp = velocityPanel # can be coordinate or velocity component(if later x=u, y=w)
-    x1,y1 = origin
-    x2,y2 = end
+    up, wp = velocityPanel # can be coordinate or velocity component(if later x=u, y=w)
+    x1, y1 = origin
+    x2, y2 = end
     
     #Figure 11.17
     r = sqrt((x2 - x1)**2 + (y2 - y1)**2)
@@ -557,4 +579,4 @@ def panel2global(velocityPanel,origin,end):
     u = cosAlpha*up - sinAlpha*wp
     w = sinAlpha*up + cosAlpha*wp
     
-    return u,w
+    return u, w

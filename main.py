@@ -34,19 +34,19 @@ collocationPointsX, collocationPointsY = meshgrid(linspace(-2,2,50),linspace(-0.
 # Calculating the data (from multipleGeometry module)
 #data = multipleGeometry.sourceTerm(Geometries,Uinf=10.)
 #data, Qx, Qy, Qres = multipleGeometry.inducedVelocities(Geometries, Uinf=10.)
-data, Qx, Qy, Qres  = multipleGeometry.inducedVelocities(Geometries, collocationPointsX, collocationPointsY, Uinf=10.)
+data = multipleGeometry.inducedVelocities(Geometries, Uinf=10.)
 
 #data = multipleGeometry.panelMethod(Geometries,Uinf=10.)
 #data = multipleGeometry.inducedVelocities(Geometries, collocationPointsX, collocationPointsY, Uinf=10.0)
 
 # Plotting Data
-figure(1)
-for num in range(len(data)):
-    plot(data[data.keys()[num]].points[0],data[data.keys()[num]].points[1],'k')
-contourf(collocationPointsX, collocationPointsY, Qres)
-quiver(collocationPointsX, collocationPointsY, Qx, Qy)
-xlabel('x-coordinate [-]')
-ylabel('y-coordinate [-]')
-title('Multiple Geometries [%d bodies]' %(len(data)))
-axis('equal')
-grid()
+#figure(1)
+#for name in data.geometries:
+#    plot(data.points[name][0],data.points[name][1],'k')
+#    quiver(data.controlPoints[name][0], data.controlPoints[name][1], data.Qx[name],data.Qy[name],data.Qres[name])
+##contourf(collocationPointsX, collocationPointsY, Qres)
+#xlabel('x-coordinate [-]')
+#ylabel('y-coordinate [-]')
+#title('Multiple Geometries [%d bodies]' %(data.length))
+#axis('equal')
+#grid()
