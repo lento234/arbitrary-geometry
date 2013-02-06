@@ -184,7 +184,13 @@ def inducedVelocities(geometries, collocationPointsX=None, collocationPointsY=No
     Qx = sum(u,axis=0) + Uinf
     Qy = sum(w,axis=0) + Winf
     Qres = sqrt(pow(Qx,2) + pow(Qy,2))
-
+    
+    # Storing the data to data[].Q, .Qtang, .Qnorm, .Qres
+    #data[data.keys()[num]].__setattr__('Q', Q[:,start:(start+end)])
+    #data[data.keys()[num]].__setattr__('Qtang', Qt[start:(start+end)])
+    #data[data.keys()[num]].__setattr__('Qnorm', Qn[start:(start+end)])
+    #data[data.keys()[num]].__setattr__('Qres', Qres[start:(start+end)])
+    
     return data, Qx, Qy, Qres 
 
 ############################################################################

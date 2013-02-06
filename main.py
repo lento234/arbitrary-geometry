@@ -22,13 +22,13 @@ Winf = 0.0
 Geometries = {'a': array([[-1.0,-0.75,-0.5,-0.75,-1.0], # x-coordinate
                           [0.0,0.25,0.0,-0.25,0.0]]),# y- coordinate
               'b': array([[0.5,0.75,1.0,0.75,0.5],
-                          [0.0,0.25,0.0,-0.25,0.0]]),
-              'c': array([[1.5,1.75,2.0,1.75,1.5],
-                          [0.0,0.25,0.0,-0.25,0.0]]),
-              'd': array([[2.5,2.75,3.0,2.75,2.5],
-                          [0.0,0.25,0.0,-0.25,0.0]])}
+                          [0.0,0.25,0.0,-0.25,0.0]])}#,
+              #'c': array([[1.5,1.75,2.0,1.75,1.5],
+              #            [0.0,0.25,0.0,-0.25,0.0]]),
+              #'d': array([[2.5,2.75,3.0,2.75,2.5],
+              #            [0.0,0.25,0.0,-0.25,0.0]])}
 
-collocationPointsX, collocationPointsY = meshgrid(linspace(-3,3,50),linspace(-3,3,50))
+collocationPointsX, collocationPointsY = meshgrid(linspace(-2,2,50),linspace(-0.5,0.5,20))
 
 
 # Calculating the data (from multipleGeometry module)
@@ -36,27 +36,17 @@ collocationPointsX, collocationPointsY = meshgrid(linspace(-3,3,50),linspace(-3,
 #data, Qx, Qy, Qres = multipleGeometry.inducedVelocities(Geometries, Uinf=10.)
 data, Qx, Qy, Qres  = multipleGeometry.inducedVelocities(Geometries, collocationPointsX, collocationPointsY, Uinf=10.)
 
-
-figure(2)
-contourf(collocationPointsX, collocationPointsY, Qres)
-colorbar()
-
 #data = multipleGeometry.panelMethod(Geometries,Uinf=10.)
-
-
 #data = multipleGeometry.inducedVelocities(Geometries, collocationPointsX, collocationPointsY, Uinf=10.0)
 
-
-
 # Plotting Data
-#figure(1)
-#for num in range(len(data)):
-#    plot(data[data.keys()[num]].controlPoints[0],data[data.keys()[num]].controlPoints[1],'b.')
-#    plot(data[data.keys()[num]].points[0],data[data.keys()[num]].points[1],'g')
-#    quiver(data[data.keys()[num]].controlPoints[0],data[data.keys()[num]].controlPoints[1],
-#           data[data.keys()[num]].Q[0],data[data.keys()[num]].Q[1],data[data.keys()[num]].Qres)
-#xlabel('x-coordinate [-]')
-#ylabel('y-coordinate [-]')
-#title('Multiple Geometries [%d bodies]' %(len(data)))
-#axis('equal')
-#grid()
+figure(1)
+for num in range(len(data)):
+    plot(data[data.keys()[num]].points[0],data[data.keys()[num]].points[1],'k')
+contourf(collocationPointsX, collocationPointsY, Qres)
+quiver(collocationPointsX, collocationPointsY, Qx, Qy)
+xlabel('x-coordinate [-]')
+ylabel('y-coordinate [-]')
+title('Multiple Geometries [%d bodies]' %(len(data)))
+axis('equal')
+grid()
