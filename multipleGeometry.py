@@ -11,95 +11,6 @@ from numpy import *
 
 ############################################################################
 
-# module to calculate panel problem
-def panelMethod(geometries, Uinf=0, Winf=0, data=None):
-    ''' Calculates the induced velocites for a given geometries or data
-    
-    sourceTerm(geometries,Uinf,Winf,data) -> data
-    
-    Parameters
-    ---------
-    geometries: dictionary of geometries
-        Key:
-            name of geometry\n
-        Content:
-            array of x, y coordinates in row 0 and 1 respectively\n
-        
-    Uinf, Winf (optional): Freestream velocity, optional else zero.
-        Uinf:
-            Freestream, in x-axis\n
-        Winf:
-            Freestream, in y-axis\n
-        
-    data [optional]: data from .sourceTerm can be provided if already calculated
-        data.points
-        ...
-        ...
-        data.Sigma
-        
-    Returns
-    -------
-    data: 'data' class containing all the data (row 0 = x-axis, row 1 = y-axis)
-        data.points: 
-            all the points\n
-        data.unitVectors (.norm, .tang):
-            the unit vectors of panel\n
-        data.controlPoints:
-            all the control points (mid-point of panel)\n
-        data.panel (.start, .end):
-            split the panel points to start and end\n
-        data.Sigma:
-            source term of the problem\n
-        
-        &&
-        
-        Induced Velocity at control point
-        
-        data.Q:
-            induced velocity (row 0 = x-axis, row 1 = y-axis)
-        data.Qtang:
-            induced velocity, tangential to panel
-        data.Qnorm:
-            induced velocity, normal to panel
-        data.Qres:
-            induced velocity, resultant
-    '''
-
-    # Determining if sigma needs to be calculated    
-    if data is None:
-        # no data available, so sourceTerm module used to calculate the terms
-        data, controlPoints, panelEnd, panelStart, Sigma, unitNorm, unitTang = sourceTerm(geometries, Uinf, Winf, calc_inducedVelocity=True)
-    else:
-        # already have data
-        controlPoints, panelEnd, panelStart, unitNorm, unitTang = reshapeData(data) # reshaping data
-        # reshaping Sigma
-        Sigma = array([])
-        for num in range(len(data)):
-            Sigma = concatenate((Sigma,data[data.keys()[num]].Sigma),axis=0)
-    
-    # Reshaping the Sigma data
-    Sigma = tile(Sigma,[shape(controlPoints.x)[0],1])
-
-    #Induced Velocity at control point
-    u,w = sor2D(Sigma, (controlPoints.x,controlPoints.y), (panelStart.x, panelStart.y), (panelEnd.x, panelEnd.y))
-    
-    Q   = concatenate(([sum(u,axis=1)],[sum(w,axis=1)])) + array([[Uinf],[Winf]]) 
-    Qt  = Q[0,:]*unitTang.x[:,0] + Q[1,:]*unitTang.y[:,0] # tangential velocity
-    Qn  = Q[0,:]*unitNorm.x[:,0] + Q[1,:]*unitNorm.y[:,0] # normal velocity
-    Qres = sqrt(pow(Q[0,:],2) + pow(Q[1,:],2)) # resultant velocity
-    
-    # Storing the data to data[].Q, .Qtang, .Qnorm, .Qres
-    start = 0
-    for num in range(len(data)):
-        end = shape(data[data.keys()[num]].controlPoints)[1]
-        data[data.keys()[num]].__setattr__('Q', Q[:,start:(start+end)])
-        data[data.keys()[num]].__setattr__('Qtang', Qt[start:(start+end)])
-        data[data.keys()[num]].__setattr__('Qnorm', Qn[start:(start+end)])
-        data[data.keys()[num]].__setattr__('Qres', Qres[start:(start+end)])
-        start = end
-    
-    return data
-
 # module to calculate the source term (only)
 def sourceTerm(geometries, Uinf=0, Winf=0):# calc_inducedVelocity = False):
     ''' Calculates the source term for a given geometries
@@ -160,12 +71,61 @@ def sourceTerm(geometries, Uinf=0, Winf=0):# calc_inducedVelocity = False):
         
     return data
 
-# to be written: work in progress
+# module to calculate induced velocity, if no collocation point, solved on panel control points
 def inducedVelocities(geometries, collocationPointsX='self', collocationPointsY='self', Uinf=0., Winf=0., data=None):
-    '''Calculated induced velocities of any points
-
-    '''
+    ''' inducedVelocities(geometries, collocationPointsX='self', collocationPointsY='self', Uinf=0., Winf=0., data=None) -> data
+        
+    Calculates the induced velocites for a given geometries or data on
+    provided collocation point. If none given, solved on the panel control
+    points itself.     
     
+    Parameters
+    ---------
+    geometries: dictionary of geometries
+        Key:
+            name of geometry\n
+        Content:
+            array of x, y coordinates in row 0 and 1 respectively\n
+        
+    Uinf, Winf (optional): Freestream velocity, optional else zero.
+        Uinf:
+            Freestream, in x-axis\n
+        Winf:
+            Freestream, in y-axis\n
+        
+    data [optional]: data from .sourceTerm can be provided if already calculated
+        data.points
+        ...
+        ...
+        data.Sigma
+        
+    Returns
+    -------
+    data: 'data' class containing all the data (row 0 = x-axis, row 1 = y-axis)
+        data.points: 
+            all the points\n
+        data.unitVectors (.norm, .tang):
+            the unit vectors of panel\n
+        data.controlPoints:
+            all the control points (mid-point of panel)\n
+        data.panel (.start, .end):
+            split the panel points to start and end\n
+        data.Sigma:
+            source term of the problem\n
+        
+        &&
+        
+        Induced Velocity at control point
+        
+        data.Q:
+            induced velocity (row 0 = x-axis, row 1 = y-axis)
+        data.Qtang:
+            induced velocity, tangential to panel
+        data.Qnorm:
+            induced velocity, normal to panel
+        data.Qres:
+            induced velocity, resultant
+    '''    
     # Solve for sigma and other terms to 
     if data == None:
         data = sourceTerm(geometries, Uinf, Winf)
@@ -190,19 +150,17 @@ def inducedVelocities(geometries, collocationPointsX='self', collocationPointsY=
         data.__setattr__('Qnorm', {}) # unique to self solving
         data.__setattr__('Qres', {})
         
-        Qtang  = Qx*unitTang.x + Qy*unitTang.y # tangential velocity
-        Qnorm  = Qx*unitNorm.x + Qy*unitNorm.y # normal velocity
-        
         start = 0
-        for name in data.geometries:
+        for name in data.geometries:    
             end = shape(data.controlPoints[name])[1]
-            
-            data.Qx[name]       = Qx[start: (start + end)]
-            data.Qy[name]       = Qy[start: (start + end)]
-            data.Qres[name]     = Qres[start: (start + end)]
-            data.Qtang[name]    = Qtang[start: (start + end)]
-            data.Qnorm[name]    = Qnorm[start: (start + end)]
 
+            data.Qx[name]       = Qx[0, start:(start+end)]
+            data.Qy[name]       = Qy[0, start:(start+end)]
+            data.Qres[name]     = Qres[0, start:(start+end)]
+            
+            data.Qtang[name]  = data.Qx[name]*data.unitVectors.tang[name][0] + data.Qy[name]*data.unitVectors.tang[name][1] # tangential velocity
+            data.Qnorm[name]  = data.Qx[name]*data.unitVectors.norm[name][0] + data.Qy[name]*data.unitVectors.norm[name][1] # normal velocity
+          
             start = end
     
     else:
@@ -210,7 +168,7 @@ def inducedVelocities(geometries, collocationPointsX='self', collocationPointsY=
         data.__setattr__('Qy', Qy)
         data.__setattr__('Qres', Qres)
     
-    return data 
+    return data
 
 ############################################################################
 #LIST OF DATA MANIPULATION MODULES

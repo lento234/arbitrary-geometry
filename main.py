@@ -7,46 +7,45 @@ Methodology: Solving any geometry using Panel Method\n
 
 from pylab import *
 ion()
-
 from numpy import *
 #from scipy import *
 
 import multipleGeometry
-
      
 # Control Parameters
 Uinf = 10.0
 Winf = 0.0
 
+
+# Importing Geometries
+naca = file('Geometries/NACA0012.txt', 'r')
+x = []
+y = []
+
+for line in naca:
+    a, b = line.strip().split('	')
+    x.append(float(a))
+    y.append(float(b))
+naca.close()
+
 # Dictionary of Geometries
-Geometries = {'a': array([[-1.0,-0.75,-0.5,-0.75,-1.0], # x-coordinate
-                          [0.0,0.25,0.0,-0.25,0.0]]),# y- coordinate
-              'b': array([[0.5,0.75,1.0,0.75,0.5],
-                          [0.0,0.25,0.0,-0.25,0.0]])}#,
-              #'c': array([[1.5,1.75,2.0,1.75,1.5],
-              #            [0.0,0.25,0.0,-0.25,0.0]]),
-              #'d': array([[2.5,2.75,3.0,2.75,2.5],
-              #            [0.0,0.25,0.0,-0.25,0.0]])}
+Geometries = {'a': array([x,add(y[::-1],0.5)]), 'b': array([x,add(y[::-1],-0.5)])}# y- coordinate
+# a, 0.5 above y=0 and b, 0.5 below y=0
 
-collocationPointsX, collocationPointsY = meshgrid(linspace(-2,2,50),linspace(-0.5,0.5,20))
-
+# Generating plotting Mesh
+meshx, meshy = meshgrid(linspace(-1,2.5,100),linspace(-1,1,100))
 
 # Calculating the data (from multipleGeometry module)
-#data = multipleGeometry.sourceTerm(Geometries,Uinf=10.)
-#data, Qx, Qy, Qres = multipleGeometry.inducedVelocities(Geometries, Uinf=10.)
-data = multipleGeometry.inducedVelocities(Geometries, Uinf=10.)
-
-#data = multipleGeometry.panelMethod(Geometries,Uinf=10.)
-#data = multipleGeometry.inducedVelocities(Geometries, collocationPointsX, collocationPointsY, Uinf=10.0)
+data = multipleGeometry.inducedVelocities(Geometries, meshx, meshy, Uinf=10.)
 
 # Plotting Data
-#figure(1)
-#for name in data.geometries:
-#    plot(data.points[name][0],data.points[name][1],'k')
-#    quiver(data.controlPoints[name][0], data.controlPoints[name][1], data.Qx[name],data.Qy[name],data.Qres[name])
-##contourf(collocationPointsX, collocationPointsY, Qres)
-#xlabel('x-coordinate [-]')
-#ylabel('y-coordinate [-]')
-#title('Multiple Geometries [%d bodies]' %(data.length))
-#axis('equal')
-#grid()
+figure(1)
+for name in data.geometries:
+    plot(data.points[name][0],data.points[name][1],'k')
+    #quiver(data.controlPoints[name][0],data.controlPoints[name][1],data.Qx[name],data.Qy[name],data.Qres[name])
+contourf(meshx, meshy, data.Qres)
+colorbar()
+axis('scaled')
+xlabel('x-coordinate [-]')
+ylabel('y-coordinate [-]')
+title('Multiple Geometries [%d bodies]' %(data.length))
