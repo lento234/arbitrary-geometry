@@ -18,13 +18,11 @@ Files Include:
 	        calculate only the source term for the input problem. Saves the data
 	        in an organized class called 'data'.
 	        
-	    - panelMethod:
-	        calculates source term in necessary, and calculates the induced
+	    - inducedVelocities:
+	         calculates source term in necessary, and calculates the induced
 	        velocities at the control points.Saves the data
 	        in an organized class called 'data'.
 	        
-	    - inducedVelocities:
-	        ??? (not written yet)
 	        
     Other modules:
         - dataClass [class]: 
@@ -33,25 +31,27 @@ Files Include:
         - Geometry [class]: 
             create a class with .x (x-axis) and .y (y-axis) data attributes
             
-        - calc_unitVectors:
+        - organizeData:
+        
+        - reshapeData2Solve:
+         
+        - reshapeData2Calc:
+        
+        
+        - sor2D:
+
+        - calc_normVec:
+        
+        - calc_tangVec:
         
         - calc_controlPoints:
         
         - calc_panelPoints:
         
-        - organizeData:
-        
-        - reshapeData:
-        
-        - sor2D:
-        
-        - normVec:
-        
-        - tangVec: 
-        
+        - panel2global
+                
         - global2panel:
         
-	    - panel2global
 	
 	
 - plotMod [plotting module] ??? (not written yet)
