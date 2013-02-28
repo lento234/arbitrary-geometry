@@ -28,11 +28,12 @@ class multiBody:
             self.length_panel.append(np.shape(data['body'].collocationPoint)[1]) # number of panel points
             
             
-        # Initializing the arrays for storing all the data
+        # Initializing the arrays for storing all the data [reduce computational load]
         self.chord       = np.zeros(len(args)) # 1-D array of chords
         self.local_pitch = np.zeros(len(args))
         self.global_pitch= np.zeros(len(args))
         self.location    = np.zeros((2,len(args))) 
+        
         self.geometry    = np.zeros((2,sum(self.length_geometry))) # x,y coordinates in row 0 and 1
         self.panelStart  = np.zeros((2,sum(self.length_panel)))
         self.panelEnd    = np.zeros((2,sum(self.length_panel)))
@@ -41,9 +42,12 @@ class multiBody:
         self.collocationPoint = np.zeros((2,sum(self.length_panel)))
         
         # Storing all the data
+        
+        # Pointer parameters
         i = 0
         start_geometry = 0
         start_panel = 0
+        # Looping through the available data
         for data in args:
             
             # Calculating the shape of 'sub array'. Finding the end point
@@ -53,22 +57,23 @@ class multiBody:
             # Storing all the data together into an array
             self.chord[i]       = data['body'].chord
             self.local_pitch[i] = data['body'].local_pitch
-            self.global_pitch[i] = data['global_pitch']
-            self.location[0,i],self.location[1,i] = data['location'][0], data['location'][1]
+            self.global_pitch[i]= data['global_pitch']
+            self.location[:,i]  = np.array([data['location']])
             
-            self.geometry[:,start_geometry:end_geometry]   = body2global(data['body'].geometry,self.location[:,i],self.global_pitch[i])
-            self.panelStart[:,start_panel:end_panel]       = body2global(data['body'].panelStart,self.location[:,i],self.global_pitch[i])
-            self.panelEnd[:,start_panel:end_panel]         = body2global(data['body'].panelEnd,self.location[:,i],self.global_pitch[i])
+            # Transforming the points and vectors to global coordinates.          
+            self.geometry[:,start_geometry:end_geometry]   = body2global(data['body'].geometry,   self.global_pitch[i], self.location[:,i])
+            self.panelStart[:,start_panel:end_panel]       = body2global(data['body'].panelStart, self.global_pitch[i], self.location[:,i])
+            self.panelEnd[:,start_panel:end_panel]         = body2global(data['body'].panelEnd,   self.global_pitch[i], self.location[:,i])
             self.normal[:,start_panel:end_panel]           = data['body'].normal # unit vector is panel specific
             self.tangent[:,start_panel:end_panel]          = data['body'].tangent # unit vector is panel specific
-            self.collocationPoint[:,start_panel:end_panel] = body2global(data['body'].collocationPoint,self.location[:,i],self.global_pitch[i])
-            
+            self.collocationPoint[:,start_panel:end_panel] = body2global(data['body'].collocationPoint, self.global_pitch[i], self.location[:,i])
             
             # Preparing for the next iteration
             start_geometry = end_geometry
             start_panel = end_panel
             i+=1
             
+    # Plotting function
     def plot(self,attribute,marker='k'):
         
         start = 0

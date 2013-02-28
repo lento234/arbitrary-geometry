@@ -4,17 +4,25 @@ Name:       Bodies. [Body and MultiBody modules]
 Description:Contains all the data of body and its function
 Author:     Lento Manickathan - 1544101
 """
+#==============================================================================
+# Importing modules
+#==============================================================================
 
+# Standard scientific module
 import numpy as np
 
-# Generates coordinates for a 2D cylinder
+#==============================================================================
+# Generates coordinates for a 2D cylinder 
+#==============================================================================
 def generate2DCylinder(n=100):
     '''
-    Generates coordinates for a 2D cylinder (circle)
+    Generates coordinates for a 2D cylinder (circle) with a unit diameter of 1.
     
     Input
     -----
-    n       - number of discretized panel elements
+    n           - number of discretized panel elements. Integer. For n panels
+                  n+1 points are generated; panel starting point and panel
+                  end point
     
     Returns
     -------

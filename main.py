@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
 Name:           main.py
@@ -32,6 +33,7 @@ ion() # Interactive on
 
 # Control Parameters
 windspeed = [1., 0.] # x-dir and y-dir respectively
+n_panels  = 100.
 
 #==============================================================================
 # Initialization of bodies and vortex field
@@ -39,16 +41,15 @@ windspeed = [1., 0.] # x-dir and y-dir respectively
 
 # Extracting the coordinates from files
 NACA0012_coor = getCoordinates(filename  = 'Geometries/NACA0012.txt',
-                               clockwise = False) # extract data from file
-                               
-cylinder_coor = generate2DCylinder(n=100) # outputs cylinder coordinates
+                               clockwise = False) # extract data from file, 
+                                                  # coordinates are given anti-clockwise       
+
+cylinder_coor = generate2DCylinder(n = n_panels) # outputs cylinder coordinates
 
 # Creating bodies
 airfoilA = body('airfoilA', NACA0012_coor, chord=1.,  local_pitch=5., pivot_point=[0.25,0. ])
-'''
 airfoilB = body('airfoilB', NACA0012_coor, chord=1.,  local_pitch=5., pivot_point=[0.25,0. ])
 tower    = body('tower',    cylinder_coor, chord=0.5, local_pitch=0., pivot_point=[0.5, 0.])
-
 
 # Creating multi-body
 windturbine = multiBody(dict(body=airfoilA, location=[0.,2.],  global_pitch=0.),
@@ -56,6 +57,7 @@ windturbine = multiBody(dict(body=airfoilA, location=[0.,2.],  global_pitch=0.),
                         dict(body=tower,    location=[0.,0.],  global_pitch=0.))
 
 
+'''
 # Vortex Field
 vortx, vorty = np.meshgrid(np.linspace(-2,-1,10),np.linspace(-1.,1.,10))
 vortGamma    = np.random.rand(np.shape(vortx)[0],np.shape(vortx)[1])
