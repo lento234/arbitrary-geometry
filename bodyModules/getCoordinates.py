@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-Name:           getCoordinates.py
-Description:    Main command module. 
-Author:         Lento Manickathan - 1544101
+Name:           getCoordinates
+Description:    Extracts the coordinates from a given file.
+Author:         Lento Manickathan - 1544101 - lento.manickathan@gmail.com
 """
 #==============================================================================
 # Importing modules

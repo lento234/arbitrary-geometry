@@ -3,7 +3,7 @@
 """
 Name:           main.py
 Description:    Main command module. 
-Author:         Lento Manickathan - 1544101
+Author:         Lento Manickathan - 1544101 - lento.manickathan@gmail.com
 """
 
 #==============================================================================
@@ -47,17 +47,42 @@ NACA0012_coor = getCoordinates(filename  = 'Geometries/NACA0012.txt',
 cylinder_coor = generate2DCylinder(n = n_panels) # outputs cylinder coordinates
 
 # Creating bodies
-airfoilA = body('airfoilA', NACA0012_coor, chord=1.,  local_pitch=5., pivot_point=[0.25,0. ])
-airfoilB = body('airfoilB', NACA0012_coor, chord=1.,  local_pitch=5., pivot_point=[0.25,0. ])
-tower    = body('tower',    cylinder_coor, chord=0.5, local_pitch=0., pivot_point=[0.5, 0.])
-
-# Creating multi-body
-windturbine = multiBody(dict(body=airfoilA, location=[0.,2.],  global_pitch=0.),
-                        dict(body=airfoilB, location=[0.,-2.], global_pitch=180.),
-                        dict(body=tower,    location=[0.,0.],  global_pitch=0.))
-
+airfoilA = body(name        = 'airfoilA',
+                coordinates = NACA0012_coor, 
+                chord       = 1.,
+                local_pitch = 10.,
+                pivot_point = [0.25, 0.])
+                
+airfoilB = body(name        = 'airfoilB',
+                coordinates = NACA0012_coor,
+                chord       = 1.,
+                local_pitch = 5.,
+                pivot_point = [0.25, 0.])
+                
+tower    = body(name        = 'tower',
+                coordinates = cylinder_coor,
+                chord       = 0.5,
+                local_pitch = 0.,
+                pivot_point = [0.5, 0.])
+                
+                
 
 '''
+# Creating multi-body
+windturbine = multiBody(dict(body         = airfoilA,
+                             location     = [0.,2.],
+                             global_pitch = 0.),  
+                        
+                        dict(body         = airfoilB,
+                             location     = [0.,-2.], 
+                             global_pitch = 180.),
+
+                        dict(body         = tower,
+                             location     = [0.,0.],
+                             global_pitch = 0.))
+
+
+
 # Vortex Field
 vortx, vorty = np.meshgrid(np.linspace(-2,-1,10),np.linspace(-1.,1.,10))
 vortGamma    = np.random.rand(np.shape(vortx)[0],np.shape(vortx)[1])

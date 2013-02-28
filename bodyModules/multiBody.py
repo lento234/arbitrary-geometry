@@ -8,7 +8,7 @@ Author:     Lento Manickathan - 1544101
 import numpy as np
 
 from bodyTransform import body2global
-from pylab import plot
+from pylab import plt
 
 class multiBody:
     def __init__(self,*args):
@@ -80,8 +80,8 @@ class multiBody:
         for num in range(len(self.name)):
             end = start + self.length_geometry[num]
 
-            plot(self.__dict__[attribute][0,start:end],
-                 self.__dict__[attribute][1,start:end],marker)
+            plt(self.__dict__[attribute][0,start:end],
+                self.__dict__[attribute][1,start:end],marker)
             
             start = end
     

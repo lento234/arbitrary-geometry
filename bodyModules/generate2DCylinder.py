@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-Name:       Bodies. [Body and MultiBody modules]
-Description:Contains all the data of body and its function
-Author:     Lento Manickathan - 1544101
+Name:           generate2DCylinder
+Description:    Generates 2D cylinder coordinates for a given number of panels
+Author:         Lento Manickathan - 1544101 - lento.manickathan@gmail.com
 """
 #==============================================================================
 # Importing modules
