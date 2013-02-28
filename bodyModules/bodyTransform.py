@@ -1,39 +1,56 @@
 # -*- coding: utf-8 -*-
 """
 Name:           bodyTransform.py
-Description:    Main command module. 
-Author:         Lento Manickathan - 1544101
+Description:    Modules to transform the coordinates from body geometry to global
+Author:         Lento Manickathan - 1544101 - lento.manickathan@gmail.com
 """
+#==============================================================================
+# Importing modules
+#==============================================================================
 
+# Standard scientific module
 import numpy as np
 
-def body2global(coordinates, theta, origin =[0.,0.]):
+#==============================================================================
+# Transformation coordinates of body system to a higher level (global)
+#==============================================================================
+def body2global(coordinates, theta, origin=[0.,0.]):
     '''
-    Body to global transformation module
+    Transforms the coordinates from body to global geometry. Rotates the
+    coordinates by theta about origin.
+    
+    Input
+    -----
+    coordinates     - x,y-coordinates of the body. x,y coordinates in in row
+                      0 and row 1 respectively. 
+    
+    theta           - Degree of rotation of the body around the origin. [deg]
+    
+    origin          - origin of the body coordinates. body is translated to 
+                      zero the origin point. 
+                      
+    Returns
+    -------
+    
+    global_coordinates - x,y coordinates of the body in global geometry. Same
+                         same as 'coordinates'. 2D array of x,y coordinates
+                         in row 0 and row 1.
     '''
     
     # converting theta into radians
     theta = np.deg2rad(theta)     
-        
-    #    global_coordinates = np.array([\
-    #    
-    #                np.add(np.multiply(x_coordinates,np.cos(theta)), 
-    #                       np.multiply(y_coordinates,np.sin(theta)))\
-    #                       + x_origin,\
-    #                       
-    #                np.add(- np.multiply(x_coordinates,np.sin(theta)),
-    #                       np.multiply(y_coordinates,np.cos(theta)))\
-    #                       + y_origin\
-    #                
-    #                                ])
     
+    # Rotating the coordinates and translating it the origin.    
     global_coordinates = np.array([\
                 ( (coordinates[0]*np.cos(theta)) + (coordinates[1]*np.sin(theta)) + origin[0]),
                 (-(coordinates[0]*np.sin(theta)) + (coordinates[1]*np.cos(theta)) + origin[1])
                                   ])
              
     return global_coordinates
-	
+    
+#==============================================================================
+# Other transformation functions
+#==============================================================================
 def body2global_split(x_coordinates, y_coordinates, x_origin,y_origin, theta_deg):
     '''
     Body to global transformation module

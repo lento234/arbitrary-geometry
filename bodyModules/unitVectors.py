@@ -1,41 +1,83 @@
 # -*- coding: utf-8 -*-
 """
-Name:           Modules for calculating geometry propetries
-Description:    Contains all the data of body and its function
-Author:         Lento Manickathan - 1544101
+Name:           unitVectors
+Description:    Calculates the unit vectors of the body panels: normal and tangent vector
+Author:         Lento Manickathan - 1544101 - lento.manickathan@gmail.com
 """
 
+#==============================================================================
+# Importing modules
+#==============================================================================
 
+# Standard scientific module
 import numpy as np
 
-# calculate the normal vectors
+
+#==============================================================================
+# Calculates the unit NORMAL vector of given panel end and start point
+#==============================================================================
 def normalVector(start, end):
     ''' 
-    Calculates the normal vector
+    Calculates the normal vector of a given panel points
+    
+    Input
+    -----
+    start   - x,y panel starting coordinates. 2D array of x,y coordinates in
+              row 0 and row 1 respectively.
+              
+    end     - x,y panel end coordinates. 2D array of x,y coordinates in row
+              0 and row 1 respectively.
+              
+    Returns
+    -------
+    norm    - x,y unit normal vector component of given x,y coordinates. 2D 
+              array of x,y components in row 0 and row 1 respectively.
     '''
     
-    # Introducing parameters    
-    r = np.sqrt(np.power((end[0]-start[0]),2) + np.power((end[1]-start[1]),2)) #hypotenuse
+    # Length of the panel
+    r = ((end[0]-start[0])**2 + (end[1]-start[1])**2)**0.5 #hypotenuse
     
-    norm = np.array(((-(end[1]-start[1])/r),((end[0]-start[0])/r)))  # sinAlpha
+    # Normal vector of the panel
+    norm = np.array(((-(end[1]-start[1])/r),
+                     ((end[0]-start[0])/r)))  # sinAlpha
     
     return norm
-    
- # calculate the tangential vector
+
+#==============================================================================
+# Calculated the unit TANGENT vector of given panel end and start point    
+#==============================================================================
 def tangentVector(start, end):
     '''
-    Calculates the tangent vector
+    Calculates the tangent vector of a given panel points
+    
+    Input
+    -----
+    start   - x,y panel starting coordinates. 2D array of x,y coordinates in
+              row 0 and row 1 respectively.
+              
+    end     - x,y panel end coordinates. 2D array of x,y coordinates in row
+              0 and row 1 respectively.
+              
+    Returns
+    -------
+    tang    - x,y unit tangent vector component of given x,y coordinates. 2D 
+              array of x,y components in row 0 and row 1 respectively.    
+              
     '''
     
-    # Introducing parameters        
-    r = np.sqrt(np.power((end[0] - start[0]),2) + np.power((end[1] - start[1]),2)) #hypothenuse
+    # Length of the panel
+    r = ((end[0] - start[0])**2 + (end[1] - start[1])**2)**0.5 #hypothenuse
     
-    tang = np.array((((end[0]-start[0])/r),((end[1]-start[1])/r))) # cosAlpha, SinAlpha
+    # Tangent vector of the panel
+    tang = np.array((((end[0]-start[0])/r),
+                     ((end[1]-start[1])/r))) # cosAlpha, SinAlpha
             
     return tang
     
-# Split Variables
-   
+    
+#==============================================================================
+# Other modules   
+#==============================================================================
 def normalVector_split(x1,x2,y1,y2):
     ''' 
     Calculates the normal vector

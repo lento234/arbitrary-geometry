@@ -64,9 +64,7 @@ tower    = body(name        = 'tower',
                 chord       = 0.5,
                 local_pitch = 0.,
                 pivot_point = [0.5, 0.])
-                
-                
-
+                               
 '''
 # Creating multi-body
 windturbine = multiBody(dict(body         = airfoilA,

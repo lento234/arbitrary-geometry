@@ -11,6 +11,7 @@ Author:         Lento Manickathan - 1544101 - lento.manickathan@gmail.com
 # Standard scientific module
 import numpy as np
 
+
 #==============================================================================
 # Gets coordinates from a txt file
 #==============================================================================

@@ -43,7 +43,9 @@ class body:
                           
         pivot_point     - x,y coordinate of center of rotation of the airfoil.
                           The pivot point is considered to be the center of 
-                          the body. 
+                          the body. Non-dimensionalized parameter, with
+                          respect to chord length. Leading edge (x=0,y=0)
+                          and trailing edge: (x=1,y=0).
         
         Returns
         -------
@@ -108,7 +110,7 @@ class body:
         self.tangent = tangentVector(self.panelStart, self.panelEnd)
         
         # Calculating the collocation points.
-        #self.collocationPoint = collocationPoint(self.panelStart, self.panelEnd, self.normal)
+        self.collocationPoint = collocationPoint(self.panelStart, self.panelEnd, self.normal)
         
     # Plotting function
     def plot(self,attribute,marker='k'):
