@@ -21,20 +21,23 @@ def getCoordinates(filename, clockwise=True):
     
     Input
     -----
-    filname     - dir/filename.extension. Give the file name with directory path
-                  and filename with extension. Textfile prefered.
+    filname     
+        - dir/filename.extension. Give the file name with directory path
+        and filename with extension. Textfile prefered.
                   
-    clockwise   - Is the geometry described 'clockwise' or anti-clockwise.
-                  Clockwise is prefered, starting from the trailing-edge.                  
+    clockwise   
+        - Is the geometry described 'clockwise' or anti-clockwise. Clockwise
+        is prefered, starting from the trailing-edge.                  
     
     
     Returns
     -------
-    coordinates - x and y coordinates from the file. 1D array of coordinates with 
-                  coordinates described in clockwise fashion. The geometry is
-                  normalized with the chord length. The geometry is displaced to
-                  to the x0,y0 = 0,0. The leading edge is placed at x=0 and the 
-                  airfoil is located on the x-axis.
+    coordinates 
+        - x and y coordinates from the file. 1D array of coordinates with 
+        coordinates described in clockwise fashion. The geometry is
+        normalized with the chord length. The geometry is displaced to the
+        x0,y0 = 0,0. The leading edge is placed at x=0 and the airfoil is  
+        located on the x-axis.
     '''
     
     # Extracting data from the given file

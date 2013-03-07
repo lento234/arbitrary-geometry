@@ -22,16 +22,19 @@ def normalVector(start, end):
     
     Input
     -----
-    start   - x,y panel starting coordinates. 2D array of x,y coordinates in
-              row 0 and row 1 respectively.
+    start   
+        - x,y panel starting coordinates. 2D array of x,y coordinates in
+        row 0 and row 1 respectively.
               
-    end     - x,y panel end coordinates. 2D array of x,y coordinates in row
-              0 and row 1 respectively.
+    end
+        - x,y panel end coordinates. 2D array of x,y coordinates in row 0 and
+        row 1 respectively.
               
     Returns
     -------
-    norm    - x,y unit normal vector component of given x,y coordinates. 2D 
-              array of x,y components in row 0 and row 1 respectively.
+    norm
+        - x,y unit normal vector component of given x,y coordinates. 2D array
+        of x,y components in row 0 and row 1 respectively.
     '''
     
     # Length of the panel

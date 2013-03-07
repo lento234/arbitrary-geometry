@@ -23,23 +23,27 @@ def collocationPoint(start, end, norm):
     
     Input
     -----
-    start   - x,y panel starting coordinates. 2D array of x,y coordinates in
-              row 0 and row 1 respectively.
+    start   
+        - x,y panel starting coordinates. 2D array of x,y coordinates in
+        row 0 and row 1 respectively.
               
-    end     - x,y panel end coordinates. 2D array of x,y coordinates in row
-              0 and row 1 respectively.
+    end
+        - x,y panel end coordinates. 2D array of x,y coordinates in row 0 and
+        row 1 respectively.
               
-    norm    - x,y unit normal vector component of given x,y coordinates. 2D 
-              array of x,y components in row 0 and row 1 respectively. 
+    norm
+        - x,y unit normal vector component of given x,y coordinates. 2D 
+        array of x,y components in row 0 and row 1 respectively. 
               
     Returns
     -------
-    collocationPoint - x,y coordinates of collocation point. 2D array of x,y  
-              coordinates in row 0 and row 1 respectively.
+    collocationPoint 
+        - x,y coordinates of collocation point. 2D array of x,y  
+        coordinates in row 0 and row 1 respectively.
     '''
     
     # Collocation point
-    collocationPoint = (start + end)/2 + 100*norm*np.finfo(np.float64).eps
+    collocationPoint = (start + end)/2 + norm*np.finfo(np.float64).eps
     
     return collocationPoint
     

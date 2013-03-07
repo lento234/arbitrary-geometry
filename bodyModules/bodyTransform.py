@@ -21,20 +21,22 @@ def body2global(coordinates, theta, origin=[0.,0.]):
     
     Input
     -----
-    coordinates     - x,y-coordinates of the body. x,y coordinates in in row
-                      0 and row 1 respectively. 
+    coordinates     
+        - x,y-coordinates of the body. x,y coordinates in in row 0 and row 1 
+        respectively. 
     
-    theta           - Degree of rotation of the body around the origin. [deg]
+    theta
+        - Degree of rotation of the body around the origin. [deg]
     
-    origin          - origin of the body coordinates. body is translated to 
-                      zero the origin point. 
+    origin
+        - origin of the body coordinates. body is translated to zero the 
+        origin point. 
                       
     Returns
     -------
-    
-    global_coordinates - x,y coordinates of the body in global geometry. Same
-                         same as 'coordinates'. 2D array of x,y coordinates
-                         in row 0 and row 1.
+    global_coordinates 
+        - x,y coordinates of the body in global geometry. Same as 
+        'coordinates'. 2D array of x,y coordinates in row 0 and row 1.
     '''
     
     # converting theta into radians

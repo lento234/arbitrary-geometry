@@ -8,7 +8,9 @@ Author:     Lento Manickathan - 1544101
 import numpy as np
 
 from bodyTransform import body2global
-from pylab import plt
+import matplotlib.pylab as plt # plotting module
+from collocationPoint import collocationPoint # Calculate the location of collocation point
+from unitVectors import normalVector, tangentVector # calculate the normal and tangent vector of panels
 
 class multiBody:
     def __init__(self,*args):
@@ -24,8 +26,8 @@ class multiBody:
             
             # Extracting initial data from the bodies
             self.name.append(data['body'].name) # body names
-            self.length_geometry.append(np.shape(data['body'].geometry)[1]) # number of geometry points
-            self.length_panel.append(np.shape(data['body'].collocationPoint)[1]) # number of panel points
+            self.length_geometry.append(data['body'].noPoints) # number of geometry points
+            self.length_panel.append(data['body'].noPoints-1) # number of panel points
             
             
         # Initializing the arrays for storing all the data [reduce computational load]
@@ -62,16 +64,17 @@ class multiBody:
             
             # Transforming the points and vectors to global coordinates.          
             self.geometry[:,start_geometry:end_geometry]   = body2global(data['body'].geometry,   self.global_pitch[i], self.location[:,i])
-            self.panelStart[:,start_panel:end_panel]       = body2global(data['body'].panelStart, self.global_pitch[i], self.location[:,i])
-            self.panelEnd[:,start_panel:end_panel]         = body2global(data['body'].panelEnd,   self.global_pitch[i], self.location[:,i])
-            self.normal[:,start_panel:end_panel]           = data['body'].normal # unit vector is panel specific
-            self.tangent[:,start_panel:end_panel]          = data['body'].tangent # unit vector is panel specific
-            self.collocationPoint[:,start_panel:end_panel] = body2global(data['body'].collocationPoint, self.global_pitch[i], self.location[:,i])
-            
+            self.panelStart[:,start_panel:end_panel]       = self.geometry[:,start_geometry:(end_geometry-1)] # starting points
+            self.panelEnd[:,start_panel:end_panel]         = self.geometry[:,(1+start_geometry):end_geometry]
+              
             # Preparing for the next iteration
             start_geometry = end_geometry
             start_panel = end_panel
             i+=1
+        
+        self.normal  = normalVector(self.panelStart,  self.panelEnd)
+        self.tangent = tangentVector(self.panelStart,  self.panelEnd)
+        self.collocationPoint = collocationPoint(self.panelStart, self.panelEnd, self.normal)            
             
     # Plotting function
     def plot(self,attribute,marker='k'):
@@ -80,8 +83,11 @@ class multiBody:
         for num in range(len(self.name)):
             end = start + self.length_geometry[num]
 
-            plt(self.__dict__[attribute][0,start:end],
-                self.__dict__[attribute][1,start:end],marker)
+            plt.plot(self.__dict__[attribute][0,start:end],
+                     self.__dict__[attribute][1,start:end],marker)
             
             start = end
+            
+    def panelMethod():
+        pass
     
