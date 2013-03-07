@@ -18,7 +18,7 @@ from bodyModules.multiBody import multiBody # Stores multiple geometries
 from vortexModules.vortexDef import vortex # Contains modules related to vortex
 
 # Main Calculating module
-from panelMethod.panelMethod import panelMethod # Controls the panel method problem
+#from panelMethod.panelMethod import panelMethod # Controls the panel method problem
 
 # Standard python scientific module [TEMPORARY]
 from pylab import *
@@ -30,7 +30,7 @@ ion() # Interactive on
 #==============================================================================
 
 # Control Parameters
-windspeed = [1., 0.] # x-dir and y-dir respectively
+windspeed = [[1.], [0.]] # x-dir and y-dir respectively
 n_panels  = 100.
 
 #==============================================================================
@@ -76,29 +76,30 @@ windturbine = multiBody(dict(body         = tower,
 vort         = vortex([-1.],[0.],[1.])
 
 # Plotting: Mesh grid
-x,y = meshgrid(linspace(-3,3,300),linspace(-3,3,300))
+x,y = meshgrid(linspace(-3,3,50),linspace(-3,3,50))
 mesh = array([concatenate(x),concatenate(y)])
  
+ 
 #==============================================================================
-# Solves the Multi-Body problem         
+# Calculating the induced Velocity
 #==============================================================================
 
 # Solve the panelMethod
-#V_tot = panelMethod(bodies         = windturbine, 
-#                    meshField_coor = 'self', 
-#                    vortexField    = None, 
-#                    Freestream     = windspeed)
-    
-#Vres = (V_tot[0]**2 + V_tot[1]**2)**0.5
+windturbine.sourcePanel_solve(evaluationPoints = 'self', vortex = None, freestream = windspeed)
 
-windturbine.panelMethod()
+# Total Velocity: sum of source induction and windspeed
+V_tot = windturbine.source_Vinduced + windspeed
+Vres = (V_tot[0]**2 + V_tot[1]**2)**0.5
+
 #==============================================================================
 # TEST PLOTTING
 #==============================================================================
 
 # Plotting 
-#figure()
-#quiver(windturbine.collocationPoint[0],windturbine.collocationPoint[1],V_tot[0],V_tot[1],Vres)
-#windturbine.plot('geometry')
-#axis('scaled')
-#colorbar()
+figure()
+windturbine.plot('geometry')
+axis('scaled')
+#axis([-3,3,-3,3])
+#contourf(x,y,reshape(Vres,shape(x)))
+quiver(windturbine.collocationPoint[0],windturbine.collocationPoint[1],V_tot[0],V_tot[1],Vres)
+colorbar()

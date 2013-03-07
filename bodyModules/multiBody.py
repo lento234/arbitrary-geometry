@@ -6,11 +6,16 @@ Author:     Lento Manickathan - 1544101
 """
 
 import numpy as np
+import sys
+
+sys.path.append('../panelMethod')
 
 from bodyTransform import body2global
 import matplotlib.pylab as plt # plotting module
 from collocationPoint import collocationPoint # Calculate the location of collocation point
 from unitVectors import normalVector, tangentVector # calculate the normal and tangent vector of panels
+
+from panelMethod import source2D
 
 class multiBody:
     def __init__(self,*args):
@@ -88,44 +93,34 @@ class multiBody:
             
             start = end
             
-    def panelMethod_source(scanPoints = 'self', vortex = None, freestream = [0.,0.]):
+    def sourcePanel_solve(self, evaluationPoints = 'self', vortex = None, freestream = [0.,0.]):
         '''
         Solve the panel problem
         '''
             
         # Calculate RHS - Neumann B.C
-        
-        RHS = source2D.RightHandSide(bodies.collocationPoint, 
-                                     bodies.normal, 
-                                     vortexField, 
-                                     Freestream)
+        self.source_RHS = source2D.RightHandSide(self.collocationPoint, 
+                                                 self.normal, 
+                                                 vortex, 
+                                                 freestream)
         
         # Calculate the influence matrix
-        A   = source2D.solve(bodies.collocationPoint, 
-                             bodies.panelStart,
-                             bodies.panelEnd,
-                             bodies.normal)
+        self.source_A   = source2D.solve(self.collocationPoint, 
+                                         self.panelStart,
+                                         self.panelEnd,
+                                         self.normal)
         
         # Solve the panel Method. Equation: Ax = RHS. Solve for x
-        Sigma = np.linalg.solve(A,RHS)
+        self.source_Sigma = np.linalg.solve(self.source_A,self.source_RHS)
     
         # To show no transpiration    
-        if meshField_coor is 'self':
-            meshField_coor = bodies.collocationPoint
+        if evaluationPoints is 'self':
+            evaluationPoints = self.collocationPoint
             
         # Calculate induced velocity on body
-        V_sorc = source2D.evaluate(Sigma,
-                                   meshField_coor,
-                                   bodies.panelStart,
-                                   bodies.panelEnd)
-        
-        if vortexField is None:
-            V_tot = V_sorc + np.array([Freestream]).transpose()
-        else:
-            # Calculate the induced velocity due to vortex field
-            V_vort = vortexField.inducedVelocity(meshField_coor)
-            # Total velocity
-            V_tot = V_sorc + V_vort['collocationPoint'] + np.array([Freestream]).transpose()
-        
+        self.source_Vinduced = source2D.evaluate(self.source_Sigma,
+                                                 evaluationPoints,
+                                                 self.panelStart,
+                                                 self.panelEnd)
         
     
