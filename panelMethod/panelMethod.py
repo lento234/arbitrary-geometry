@@ -19,7 +19,7 @@ import numpy as np
 #==============================================================================
 # Main panel method evaluation module
 #==============================================================================
-def panelMethod(bodies, meshField_coor='self', vortexField=None, Freestream = [0.,0.]):
+def panelMethod(bodies, meshField_coor='self', vortexField=None, freestream = [0.,0.]):
     '''
     Solves the potential flow problem using source terms
     '''
