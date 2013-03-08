@@ -85,9 +85,4 @@ def toEvaluate(singularity, collocationPoint, panelStart, panelEnd):
     singularity = np.tile(singularity, [N,1]) # Source term vary column-wise
     
     return singularity, collocationPoint_x, collocationPoint_y,\
-           panelStart_x, panelStart_y,  panelEnd_x, panelEnd_y
-           
-    
-    
-           
-           
+           panelStart_x, panelStart_y,  panelEnd_x, panelEnd_y       

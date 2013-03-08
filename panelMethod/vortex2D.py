@@ -13,8 +13,6 @@ Author:     Lento Manickathan - 1544101
 import numpy as np
 # Custom - panel method modules
 import reshapeData # to reshape the given datas
-#import inducedVelocity # to calculate the induced velocity 
-
 
 #==============================================================================
 # Calculate the induced velocity due to vortex strength panel
@@ -23,10 +21,6 @@ def inducedVelocity(gamma, x, y, x1, y1, x2, y2):
     '''
     Calculate the induced velocity due to a source term
     '''
-
-    ##########!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    # Pre calculations
-    # Transforming from global coordinates to panel coordinates
     
     x2mx1 = x2-x1
     y2my1 = y2-y1
@@ -133,6 +127,3 @@ def RightHandSide(collocationPoint, tangent, vortex=None, freestream=[[0.],[0.]]
         RHS = -((V_vort[0] + freestream[0])*tangent[0] + (V_vort[1] + freestream[1])*tangent[1])
         
     return RHS
-    
-    
-    

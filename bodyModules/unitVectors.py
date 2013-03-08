@@ -77,20 +77,6 @@ def tangentVector(start, end):
             
     return tang
     
-def unitAngle(start, end):
-    '''
-    Calculates the cosAlpha of the panel
-    '''
-    
-    # Length of the panel
-    r = ((end[0]-start[0])**2 + (end[1]-start[1])**2)**0.5 #hypotenuse
-    
-    # Normal vector of the panel
-    angle = np.array((((end[1]-start[1])/r), # sinAlpha
-                     ((end[0]-start[0])/r)))  # cosAlpha
-    
-    return angle
-    
 #==============================================================================
 # Other modules   
 #==============================================================================

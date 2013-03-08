@@ -14,7 +14,6 @@ import numpy as np
 
 # Custom - panel method modules
 import reshapeData # to reshape the given datas
-#import inducedVelocity # to calculate the induced velocity 
 
 #==============================================================================
 # Calculate the induced velocity due to source strength panel
@@ -140,6 +139,3 @@ def RightHandSide(collocationPoint, normal, vortex = None, Freestream = [0., 0.]
         RHS = -((V_vort[0] + Freestream[0])*normal[0] + (V_vort[1] + Freestream[1])*normal[1])
         
     return RHS
-    
-    
-    

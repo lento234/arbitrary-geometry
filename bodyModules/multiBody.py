@@ -5,19 +5,35 @@ Description:Contains all the data of body and its function
 Author:     Lento Manickathan - 1544101
 """
 
+#==============================================================================
+# Importing Modules
+#==============================================================================
+
+# Standarad scientific module
 import numpy as np
+
+# System module: to import
 import sys
 
+# Appending path to panelMethod and importing panelMethod
 sys.path.append('../panelMethod')
 
+from panelMethod import source2D
+from panelMethod import vortex2D
+
+# Custom body modules
 from bodyTransform import body2global
 import matplotlib.pylab as plt # plotting module
 from collocationPoint import collocationPoint # Calculate the location of collocation point
 from unitVectors import normalVector, tangentVector # calculate the normal and tangent vector of panels
 
-from panelMethod import source2D
-from panelMethod import vortex2D
+#==============================================================================
+# Multi-body module to store all a multi-body data
+#==============================================================================
 class multiBody:
+    '''
+    Multi-body
+    '''
     def __init__(self,*args):
         
         # Extracting initial data
@@ -152,7 +168,4 @@ class multiBody:
         self.Vinduced = vortex2D.evaluate(self.vortex_gamma,
                                           evaluationPoints,
                                           self.panelStart,
-                                          self.panelEnd)
-        
-        
-    
+                                          self.panelEnd)  
