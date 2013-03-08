@@ -57,7 +57,7 @@ def collocationPoint_split(x1,x2, y1,y2, xNorm,yNorm):
     Calculates the collocation point
     '''
     
-    xCp = np.add((x1 + x2)/2, 100*xNorm*np.finfo(float).eps) 
-    yCp = np.add((y1 + y2)/2, 100*yNorm*np.finfo(float).eps) 
+    xCp = np.add((x1 + x2)/2, xNorm*np.finfo(float).eps) 
+    yCp = np.add((y1 + y2)/2, yNorm*np.finfo(float).eps) 
     
     return xCp, yCp

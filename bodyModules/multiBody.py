@@ -16,7 +16,7 @@ from collocationPoint import collocationPoint # Calculate the location of colloc
 from unitVectors import normalVector, tangentVector # calculate the normal and tangent vector of panels
 
 from panelMethod import source2D
-
+from panelMethod import vortex2D
 class multiBody:
     def __init__(self,*args):
         
@@ -44,9 +44,9 @@ class multiBody:
         self.geometry    = np.zeros((2,sum(self.length_geometry))) # x,y coordinates in row 0 and 1
         self.panelStart  = np.zeros((2,sum(self.length_panel)))
         self.panelEnd    = np.zeros((2,sum(self.length_panel)))
-        self.normal      = np.zeros((2,sum(self.length_panel)))
-        self.tangent     = np.zeros((2,sum(self.length_panel)))
-        self.collocationPoint = np.zeros((2,sum(self.length_panel)))
+        #self.normal      = np.zeros((2,sum(self.length_panel)))
+        #self.tangent     = np.zeros((2,sum(self.length_panel)))
+        #self.collocationPoint = np.zeros((2,sum(self.length_panel)))
         
         # Storing all the data
         
@@ -79,7 +79,6 @@ class multiBody:
         
         self.normal  = normalVector(self.panelStart,  self.panelEnd)
         self.tangent = tangentVector(self.panelStart,  self.panelEnd)
-        self.collocationPoint = collocationPoint(self.panelStart, self.panelEnd, self.normal)            
             
     # Plotting function
     def plot(self,attribute,marker='k'):
@@ -93,15 +92,18 @@ class multiBody:
             
             start = end
             
-    def sourcePanel_solve(self, evaluationPoints = 'self', vortex = None, freestream = [0.,0.]):
+    def sourcePanel_solve(self, evaluationPoints='self', vortexPoints=None, freestream=[0.,0.]):
         '''
         Solve the panel problem
         '''
-            
+        
+        # Defining collocationPoint
+        self.collocationPoint = collocationPoint(self.panelStart, self.panelEnd, self.normal) # + normal
+        
         # Calculate RHS - Neumann B.C
         self.source_RHS = source2D.RightHandSide(self.collocationPoint, 
                                                  self.normal, 
-                                                 vortex, 
+                                                 vortexPoints, 
                                                  freestream)
         
         # Calculate the influence matrix
@@ -111,16 +113,40 @@ class multiBody:
                                          self.normal)
         
         # Solve the panel Method. Equation: Ax = RHS. Solve for x
-        self.source_Sigma = np.linalg.solve(self.source_A,self.source_RHS)
+        self.source_sigma = np.linalg.solve(self.source_A,self.source_RHS)
     
         # To show no transpiration    
         if evaluationPoints is 'self':
             evaluationPoints = self.collocationPoint
             
         # Calculate induced velocity on body
-        self.source_Vinduced = source2D.evaluate(self.source_Sigma,
+        self.source_Vinduced = source2D.evaluate(self.source_sigma,
                                                  evaluationPoints,
                                                  self.panelStart,
                                                  self.panelEnd)
+        
+    def vortexPanel_solve(self, evaluationPoints = 'self', vortexPoints=None, freestream=[[0.],[0.]]):
+        '''
+        Solve potential flow using vortex panels
+        '''
+        
+        # Defining collocationPoints: slightly inside
+        self.collocationPoint = collocationPoint(self.panelStart,self.panelEnd, -self.normal) # inside the body
+        
+        # Calculate RHS - zero tangential
+        self.vortex_RHS = vortex2D.RightHandSide(self.collocationPoint,
+                                                 self.tangent,
+                                                 vortexPoints,
+                                                 freestream)
+                                                 
+        # Calculate the influence matrix
+        self.vortex_A   = vortex2D.solve(self.collocationPoint,
+                                         self.panelStart,
+                                         self.panelEnd,
+                                         self.tangent)
+                                         
+        # Solve the vortex Method. Ax=RHS
+        self.vortex_gamma = np.linalg.solve(self.vortex_A,self.vortex_RHS)
+        
         
     

@@ -85,7 +85,9 @@ mesh = array([concatenate(x),concatenate(y)])
 #==============================================================================
 
 # Solve the panelMethod
-windturbine.sourcePanel_solve(evaluationPoints = 'self', vortex = None, freestream = windspeed)
+windturbine.sourcePanel_solve(evaluationPoints  = 'self',
+                              vortexPoints      = None,
+                              freestream        = windspeed)
 
 # Total Velocity: sum of source induction and windspeed
 V_tot = windturbine.source_Vinduced + windspeed

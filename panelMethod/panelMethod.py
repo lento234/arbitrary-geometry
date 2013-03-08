@@ -55,6 +55,7 @@ def vortexPanel(collocationpoint, panelStart, panelEnd, tangent, evaluationPoint
     Solves the potential flow problem using vortex panels
     '''
     
+    # Calculated the RHS - Dirichlet B.C
     pass
     
     
