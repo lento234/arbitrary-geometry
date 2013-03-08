@@ -41,8 +41,8 @@ def normalVector(start, end):
     r = ((end[0]-start[0])**2 + (end[1]-start[1])**2)**0.5 #hypotenuse
     
     # Normal vector of the panel
-    norm = np.array(((-(end[1]-start[1])/r),
-                     ((end[0]-start[0])/r)))  # sinAlpha
+    norm = np.array(((-(end[1]-start[1])/r), # sinAlpha
+                     ((end[0]-start[0])/r))) # cosAlpha
     
     return norm
 
@@ -72,11 +72,24 @@ def tangentVector(start, end):
     r = ((end[0] - start[0])**2 + (end[1] - start[1])**2)**0.5 #hypothenuse
     
     # Tangent vector of the panel
-    tang = np.array((((end[0]-start[0])/r),
-                     ((end[1]-start[1])/r))) # cosAlpha, SinAlpha
+    tang = np.array((((end[0]-start[0])/r),  # cosAlpha
+                     ((end[1]-start[1])/r))) # sinAlpha
             
     return tang
     
+def unitAngle(start, end):
+    '''
+    Calculates the cosAlpha of the panel
+    '''
+    
+    # Length of the panel
+    r = ((end[0]-start[0])**2 + (end[1]-start[1])**2)**0.5 #hypotenuse
+    
+    # Normal vector of the panel
+    angle = np.array((((end[1]-start[1])/r), # sinAlpha
+                     ((end[0]-start[0])/r)))  # cosAlpha
+    
+    return angle
     
 #==============================================================================
 # Other modules   

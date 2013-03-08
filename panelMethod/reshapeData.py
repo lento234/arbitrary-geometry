@@ -12,7 +12,7 @@ import numpy as np
 #==============================================================================
 # Restructure the data array to solve for source term
 #==============================================================================
-def toSolve(collocationPoint, panelStart, panelEnd, normal):
+def toSolve(collocationPoint, panelStart, panelEnd, unitVector):
     '''
     Reshape the data and concatenate to one matrix, tile to right format
     to solve for the source term. The end shape of every matrix will be
@@ -53,16 +53,16 @@ def toSolve(collocationPoint, panelStart, panelEnd, normal):
     
     # UnitVectors are attributes of THE PANEL AT THE CONTROL POINT. 
     #       ergo, varies row-wise aswell, same as control points
-    normal_x = np.tile(np.array([normal[0]]).transpose(),[1,M])
-    normal_y = np.tile(np.array([normal[1]]).transpose(),[1,M])
+    unitVector_x = np.tile(np.array([unitVector[0]]).transpose(),[1,M])
+    unitVector_y = np.tile(np.array([unitVector[1]]).transpose(),[1,M])
    
     return collocationPoint_x, collocationPoint_y, panelStart_x, panelStart_y,\
-           panelEnd_x, panelEnd_y, normal_x, normal_y#, tangent_x, tangent_y
+           panelEnd_x, panelEnd_y, unitVector_x, unitVector_y#, tangent_x, tangent_y
   
 #==============================================================================
 # Restructure the data array to evalute the induction due to source term         
 #==============================================================================
-def toEvaluate(Sigma, collocationPoint, panelStart, panelEnd):
+def toEvaluate(singularity, collocationPoint, panelStart, panelEnd):
     '''
     Reshape the data for evaluate the source 
     '''
@@ -82,10 +82,11 @@ def toEvaluate(Sigma, collocationPoint, panelStart, panelEnd):
     panelEnd_x = np.tile(panelEnd[0], [N,1])
     panelEnd_y = np.tile(panelEnd[1], [N,1])
   
-    Sigma = np.tile(Sigma, [N,1]) # Source term vary column-wise
+    singularity = np.tile(singularity, [N,1]) # Source term vary column-wise
     
-    return Sigma, collocationPoint_x, collocationPoint_y,\
+    return singularity, collocationPoint_x, collocationPoint_y,\
            panelStart_x, panelStart_y,  panelEnd_x, panelEnd_y
+           
     
     
            

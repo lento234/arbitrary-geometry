@@ -34,7 +34,6 @@ class multiBody:
             self.length_geometry.append(data['body'].noPoints) # number of geometry points
             self.length_panel.append(data['body'].noPoints-1) # number of panel points
             
-            
         # Initializing the arrays for storing all the data [reduce computational load]
         self.chord       = np.zeros(len(args)) # 1-D array of chords
         self.local_pitch = np.zeros(len(args))
@@ -44,9 +43,6 @@ class multiBody:
         self.geometry    = np.zeros((2,sum(self.length_geometry))) # x,y coordinates in row 0 and 1
         self.panelStart  = np.zeros((2,sum(self.length_panel)))
         self.panelEnd    = np.zeros((2,sum(self.length_panel)))
-        #self.normal      = np.zeros((2,sum(self.length_panel)))
-        #self.tangent     = np.zeros((2,sum(self.length_panel)))
-        #self.collocationPoint = np.zeros((2,sum(self.length_panel)))
         
         # Storing all the data
         
@@ -147,6 +143,16 @@ class multiBody:
                                          
         # Solve the vortex Method. Ax=RHS
         self.vortex_gamma = np.linalg.solve(self.vortex_A,self.vortex_RHS)
+        
+        # To show no transpiration    
+        if evaluationPoints is 'self':
+            evaluationPoints = self.collocationPoint
+            
+        # Calculate induced velocity on body
+        self.Vinduced = vortex2D.evaluate(self.vortex_gamma,
+                                          evaluationPoints,
+                                          self.panelStart,
+                                          self.panelEnd)
         
         
     

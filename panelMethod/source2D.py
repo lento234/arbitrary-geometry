@@ -19,7 +19,7 @@ import reshapeData # to reshape the given datas
 #==============================================================================
 # Calculate the induced velocity due to source strength panel
 #==============================================================================
-def inducedVelocity(sigma, x0, y0, x1, y1, x2, y2):
+def inducedVelocity(sigma, x, y, x1, y1, x2, y2):
     '''
     Calculate the induced velocity due to a source term
     '''
@@ -32,23 +32,23 @@ def inducedVelocity(sigma, x0, y0, x1, y1, x2, y2):
     cosAlpha = (x2 - x1)/r
     sinAlpha = (y2 - y1)/r
 
-    x0mx1 = x0 - x1 # else, calculated twice
-    y0my1 = y0 - y1 # else, calculated twice
+    xmx1 = x - x1 # else, calculated twice
+    ymy1 = y - y1 # else, calculated twice
     
     # In panel coordinates (from global coordinates)    
-    x  = cosAlpha*(x0mx1)  + sinAlpha*(y0my1)
-    y  = -sinAlpha*(x0mx1) + cosAlpha*(y0my1)    
+    xp  = cosAlpha*(xmx1)  + sinAlpha*(ymy1)
+    yp  = -sinAlpha*(xmx1) + cosAlpha*(ymy1)    
     
-    x2 = cosAlpha*(x2 - x1)+ sinAlpha*(y2 - y1)
+    x2p = cosAlpha*(x2 - x1)+ sinAlpha*(y2 - y1)
      
     # Calculating the induction at panel coordinates
    
     # Defining preliminary variables    
-    r1 = x**2 + y**2
-    r2 = (x - x2)**2 + y**2
-    
-    theta1 = np.arctan2(y, x) # theta1
-    theta2 = np.arctan2(y, (x - x2))
+    r1 = xp**2 + yp**2
+    r2 = (xp - x2p)**2 + yp**2
+        
+    theta1 = np.arctan2(yp, xp) # theta1
+    theta2 = np.arctan2(yp, (xp - x2p))
     
     #Equation 11.21 and 11.22
     up = (sigma/(4*np.pi))*np.log(r1/r2)
@@ -87,7 +87,8 @@ def solve(collocationPoint, panelStart, panelEnd, normal):
     u,w = inducedVelocity(sigma, collocationPoint_x, collocationPoint_y,
                           panelStart_x, panelStart_y, 
                           panelEnd_x, panelEnd_y)
-    
+
+        
     # Calculating the influence matrix
     A = u*normal_x + w*normal_y
            

@@ -19,41 +19,35 @@ import reshapeData # to reshape the given datas
 #==============================================================================
 # Calculate the induced velocity due to vortex strength panel
 #==============================================================================
-def inducedVelocity(gamma, x0, y0, x1, y1, x2, y2):
+def inducedVelocity(gamma, x, y, x1, y1, x2, y2):
     '''
     Calculate the induced velocity due to a source term
     '''
-    
+
     ##########!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    # Pre calculations
     # Transforming from global coordinates to panel coordinates
-    '''
+    
+    x2mx1 = x2-x1
+    y2my1 = y2-y1
+    
+    
+    r = np.sqrt((x2mx1)**2 + (y2my1)**2)  
+    
     #Figure 11.17   
-    r = np.sqrt((x2 - x1)**2 + (y2 - y1)**2)  
-
-    cosAlpha = (x2 - x1)/r
-    sinAlpha = (y2 - y1)/r
-
-    #x0mx1 = x0 - x1 # else, calculated twice
-    #y0my1 = y0 - y1 # else, calculated twice
+    cosAlpha = (x2mx1)/r
+    sinAlpha = (y2my1)/r
     
-        
     # In panel coordinates (from global coordinates)    
-    x  = cosAlpha*(x0-x1)  + sinAlpha*(y0-y1)
-    y  = -sinAlpha*(x0-x1) + cosAlpha*(y0-y1)
+    xp  = cosAlpha*(x-x1)  + sinAlpha*(y-y1)
+    yp  = -sinAlpha*(x-x1) + cosAlpha*(y-y1)
+    
+    x2p = cosAlpha*(x2mx1)  + sinAlpha*(y2my1)
 
-    #x2mx1 = x2 - x1
-    #y2my1 = y2 - y1
-    
-    #x1 =     
-    
-    #x2 = cosAlpha*(x2-x1)+ sinAlpha*(y2-y1)
-    #y2 = -sinAlpha*(x2-x1) + cosAlpha*(y2-y1)
-     
     # Calculating the induction at panel coordinates
-   
     #Equation 11.44 and 11.45
-    up = (gamma/(2*np.pi))*(np.arctan2((y-y2), (x-x2)) - np.arctan2((y-y1), (x-x1)))
-    wp = -(gamma/(4*np.pi))*np.log(((x-x1)**2 + (y-y1)**2)/((x-x2)**2 + (y-y2)**2))
+    up = (gamma/(2*np.pi))*(np.arctan2(yp, (xp-x2p)) - np.arctan2(yp, xp))
+    wp = -(gamma/(4*np.pi))*np.log((xp**2 + yp**2)/((xp-x2p)**2 + yp**2))
         
     # Transforming the velocity from panel coordinates to global coordinates
       
@@ -62,9 +56,7 @@ def inducedVelocity(gamma, x0, y0, x1, y1, x2, y2):
     w = sinAlpha*up + cosAlpha*wp
     
     return u, w
-    '''
-    pass
-
+    
 #==============================================================================
 # Function to solve for the influence matrix
 #==============================================================================
@@ -112,9 +104,9 @@ def evaluate(Gamma, collocationPoint, panelStart, panelEnd):
                                                                  panelEnd)
  
     # Calculating the induced velocity due to the given Source
-    u,w = inducedVelocity.calc(Gamma, collocationPoint_x, collocationPoint_y,
-                               panelStart_x, panelStart_y,
-                               panelEnd_x, panelEnd_y)
+    u,w = inducedVelocity(Gamma, collocationPoint_x, collocationPoint_y,
+                          panelStart_x, panelStart_y,
+                          panelEnd_x, panelEnd_y)
                                
     V_vort = np.array([np.sum(u, axis=1),
                        np.sum(w, axis=1)])

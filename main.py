@@ -41,42 +41,46 @@ n_panels  = 100.
 airfoilA = body(name        = 'airfoilA',
                 shape       = ('geometries/NACA0012.txt', False), 
                 chord       = 1.,
-                local_pitch = 5.,
+                local_pitch = 0.,
                 pivot_point = [0.25, 0.])
         
 airfoilB = body(name        = 'airfoilB',
                 shape       = ('geometries/NACA0012.txt', False),
                 chord       = 1.,
-                local_pitch = 5.,
+                local_pitch = 0.,
                 pivot_point = [0.25, 0.])
            
 tower    = body(name        = 'tower',
                 shape       = ('cylinder', 100),
-                chord       = 0.25,
+                chord       = 1,
                 local_pitch = 0.,
                 pivot_point = [0.5, 0.])
 
 # Creating multi-body
-windturbine = multiBody(dict(body         = tower,
-                             location     = [0.,0.],
-                             global_pitch = 0.),
-                             
-                        dict(body         = airfoilA,
-                             location     = [0.,2.],
-                             global_pitch = 0.),  
+#windturbine = multiBody(dict(body         = tower,
+#                             location     = [0.,0.],
+#                             global_pitch = 0.),
+#                             
+#                        dict(body         = airfoilA,
+#                             location     = [0.,0.],
+#                             global_pitch = 0.),  
+#                        
+#                        dict(body         = airfoilB,
+#                             location     = [0.,-2.], 
+#                             global_pitch = 180.))
                         
-                        dict(body         = airfoilB,
-                             location     = [0.,-2.], 
-                             global_pitch = 180.))
-
+cylinder_testCase = multiBody(dict(body         = tower,
+                                   location     = [0., 0.],
+                                   global_pitch = 0.))
+                                                                      
 #==============================================================================
 # Defining Vortex and scan points
 #==============================================================================
 # Vortex Field
-vort         = vortex([-1.],[0.],[1.])
+#vort         = vortex([-1.],[0.],[1.])
 
 # Plotting: Mesh grid
-x,y = meshgrid(linspace(-3,3,50),linspace(-3,3,50))
+x,y = meshgrid(linspace(-1,1,200),linspace(-1,1,200))
 mesh = array([concatenate(x),concatenate(y)])
  
  
@@ -85,13 +89,15 @@ mesh = array([concatenate(x),concatenate(y)])
 #==============================================================================
 
 # Solve the panelMethod
-windturbine.sourcePanel_solve(evaluationPoints  = 'self',
-                              vortexPoints      = None,
-                              freestream        = windspeed)
+cylinder_testCase.vortexPanel_solve(evaluationPoints  = mesh,
+                                    vortexPoints      = None,
+                                    freestream        = windspeed)
 
 # Total Velocity: sum of source induction and windspeed
-V_tot = windturbine.source_Vinduced + windspeed
+V_tot = cylinder_testCase.Vinduced + windspeed
+
 Vres = (V_tot[0]**2 + V_tot[1]**2)**0.5
+Vres[Vres>2] = nan
 
 #==============================================================================
 # TEST PLOTTING
@@ -99,9 +105,9 @@ Vres = (V_tot[0]**2 + V_tot[1]**2)**0.5
 
 # Plotting 
 figure()
-windturbine.plot('geometry')
+cylinder_testCase.plot('geometry')
 axis('scaled')
-#axis([-3,3,-3,3])
-#contourf(x,y,reshape(Vres,shape(x)))
-quiver(windturbine.collocationPoint[0],windturbine.collocationPoint[1],V_tot[0],V_tot[1],Vres)
+axis([-1,1,-1,1])
+contourf(x,y,reshape(Vres,shape(x)))
+#quiver(cylinder_testCase.collocationPoint[0],cylinder_testCase.collocationPoint[1],V_tot[0],V_tot[1],Vres)
 colorbar()
