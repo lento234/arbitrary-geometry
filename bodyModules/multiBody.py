@@ -125,17 +125,17 @@ class multiBody:
                                          self.normal)
         
         # Solve the panel Method. Equation: Ax = RHS. Solve for x
-        self.source_sigma = np.linalg.solve(self.source_A,self.source_RHS)
+        self.source_sigma = np.linalg.solve(self.source_A, self.source_RHS)
     
         # To show no transpiration    
         if evaluationPoints is 'self':
             evaluationPoints = self.collocationPoint
             
         # Calculate induced velocity on body
-        self.source_Vinduced = source2D.evaluate(self.source_sigma,
-                                                 evaluationPoints,
-                                                 self.panelStart,
-                                                 self.panelEnd)
+        self.Vinduced = source2D.evaluate(self.source_sigma,
+                                          evaluationPoints,
+                                          self.panelStart,
+                                          self.panelEnd)
         
     def vortexPanel_solve(self, evaluationPoints = 'self', vortexPoints=None, freestream=[[0.],[0.]]):
         '''
