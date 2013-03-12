@@ -25,7 +25,7 @@ ion() # Interactive on
 
 # Control Parameters
 windspeed = np.array([[1.], [0.]]) # x-dir and y-dir respectively
-n_panels = 20
+n_panels = 1000
          
 #==============================================================================
 # Initialization of bodies
@@ -45,7 +45,7 @@ cylinder = multiBody(dict(body         = tower,
 # Defining Vortex and scan points
 #==============================================================================
 
-x,y = meshgrid(linspace(-1,1,100),linspace(-1,1,100))
+x,y = meshgrid(linspace(-2,2,200),linspace(-2,2,200))
 mesh = array([concatenate(x),concatenate(y)])
  
 #==============================================================================
