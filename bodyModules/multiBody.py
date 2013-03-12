@@ -158,7 +158,7 @@ class multiBody:
                                          self.tangent)
                                          
         # Solve the vortex Method. Ax=RHS
-        self.vortex_gamma = np.linalg.solve(self.vortex_A,self.vortex_RHS)
+        self.vortex_gamma = np.linalg.solve(self.vortex_A, self.vortex_RHS)
         
         # To show no transpiration    
         if evaluationPoints is 'self':
@@ -168,4 +168,5 @@ class multiBody:
         self.Vinduced = vortex2D.evaluate(self.vortex_gamma,
                                           evaluationPoints,
                                           self.panelStart,
-                                          self.panelEnd)  
+                                          self.panelEnd)
+                                         

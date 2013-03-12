@@ -88,7 +88,7 @@ def evaluate(Gamma, collocationPoint, panelStart, panelEnd):
     '''
     Evaluate the source terms
     '''
-    
+    # Reshape data from multibody     
     Sigma,\
     collocationPoint_x, collocationPoint_y,\
     panelStart_x, panelStart_y,\
@@ -96,16 +96,16 @@ def evaluate(Gamma, collocationPoint, panelStart, panelEnd):
                                                                  collocationPoint,
                                                                  panelStart,
                                                                  panelEnd)
- 
+
     # Calculating the induced velocity due to the given Source
     u,w = inducedVelocity(Gamma, collocationPoint_x, collocationPoint_y,
                           panelStart_x, panelStart_y,
                           panelEnd_x, panelEnd_y)
-                               
+                           
     V_vort = np.array([np.sum(u, axis=1),
                        np.sum(w, axis=1)])
                        
-    return V_vort      
+    return V_vort   
                                                                  
 #==============================================================================
 # Calculate the RHS of the problem
