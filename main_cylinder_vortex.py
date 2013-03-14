@@ -25,7 +25,7 @@ ion() # Interactive on
 
 # Control Parameters
 windspeed = np.array([[1.], [0.]]) # x-dir and y-dir respectively
-n_panels = 1000
+n_panels = 100
          
 #==============================================================================
 # Initialization of bodies
