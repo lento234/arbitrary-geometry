@@ -57,16 +57,17 @@ mesh = array([concatenate(x),concatenate(y)])
 #==============================================================================
 # Calculating the induced Velocity
 #==============================================================================
-
-cylinder.sourcePanel_solve(evaluationPoints = mesh,
-                           vortexPoints     = None,
-                           freestream       = windspeed)
+V_external           = array([repeat(windspeed[0],shape(cylinder.collocationPoint)[1]),
+                              repeat(windspeed[1],shape(cylinder.collocationPoint)[1])])
+                              
+cylinder.sourcePanel_solve(Vinduced         = V_external,
+                           evaluationPoint  = mesh)
 
 #==============================================================================
 # Calculating the induced velocity
 #==============================================================================
 
-cylinder_Vtot = cylinder.Vinduced + windspeed
+cylinder_Vtot = cylinder.source_V + windspeed
 cylinder_Vres = sqrt(cylinder_Vtot[0]**2 + cylinder_Vtot[1]**2) 
 
 #==============================================================================

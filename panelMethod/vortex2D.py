@@ -110,20 +110,32 @@ def evaluate(Gamma, collocationPoint, panelStart, panelEnd):
 #==============================================================================
 # Calculate the RHS of the problem
 #==============================================================================
-def RightHandSide(collocationPoint, tangent, vortex=None, freestream=[[0.],[0.]]):
+def RightHandSide(Vinduced, tangent):#, vortex=None, freestream=[[0.],[0.]]):
     '''
     Solve the right hand side of the panel method problem
     '''
     
-    if vortex is None:
-        # If no point vortex needs to be calculated
-        RHS = -(freestream[0]*tangent[0] + freestream[1]*tangent[1])
-    else:
-        # calculate the induced velocity due to vortex
-        V_vort = vortex.inducedVelocity(collocationPoint)['collocationPoint']
-            
-        # Right-hand-side of the equation. 
-        #       Adding the freestream and vortex induction before taking the norm
-        RHS = -((V_vort[0] + freestream[0])*tangent[0] + (V_vort[1] + freestream[1])*tangent[1])
+    #if vortex is None:
+    # If no point vortex needs to be calculated
+    RHS = -(Vinduced[0]*tangent[0] + Vinduced[1]*tangent[1])
         
     return RHS
+
+
+#def RightHandSide(collocationPoint, tangent, vortex=None, freestream=[[0.],[0.]]):
+#    '''
+#    Solve the right hand side of the panel method problem
+#    '''
+#    
+#    if vortex is None:
+#        # If no point vortex needs to be calculated
+#        RHS = -(freestream[0]*tangent[0] + freestream[1]*tangent[1])
+#    else:
+#        # calculate the induced velocity due to vortex
+#        V_vort = vortex.inducedVelocity(collocationPoint)['collocationPoint']
+#            
+#        # Right-hand-side of the equation. 
+#        #       Adding the freestream and vortex induction before taking the norm
+#        RHS = -((V_vort[0] + freestream[0])*tangent[0] + (V_vort[1] + freestream[1])*tangent[1])
+#        
+#    return RHS

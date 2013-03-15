@@ -30,8 +30,8 @@ ion() # Interactive on
 #==============================================================================
 
 # Control Parameters
-windspeed = np.array([[10.], [0.]]) # x-dir and y-dir respectively
-n_panels = 4
+windspeed = np.array([[1.], [0.]]) # x-dir and y-dir respectively
+n_panels = 18
         
 
 #==============================================================================
@@ -53,7 +53,7 @@ airfoilB = body(name        = 'airfoilB',
            
 tower    = body(name        = 'tower',
                 shape       = ('cylinder', n_panels),
-                chord       = sqrt(1.+1.),
+                chord       = 1,#sqrt(1.+1.),
                 local_pitch = 0.,
                 pivot_point = [0.5, 0.])
 '''
@@ -73,7 +73,7 @@ windturbine = multiBody(dict(body         = tower,
                                    
 cylinder = multiBody(dict(body         = tower,
                           location     = [0., 0.],
-                          global_pitch = -360./(2*n_panels))) 
+                          global_pitch = 0.))#-360./(2*n_panels))) 
                                                              
 #==============================================================================
 # Defining Vortex and scan points
@@ -82,39 +82,40 @@ cylinder = multiBody(dict(body         = tower,
 #vort         = vortex([-1.],[0.],[1.])
 
 # Plotting: Mesh grid
-x,y = meshgrid(linspace(-1,1,1000),linspace(-1,1,1000))
+x,y = meshgrid(linspace(-1,1,200),linspace(-1,1,200))
 mesh = array([concatenate(x),concatenate(y)])
- 
  
 #==============================================================================
 # Calculating the induced Velocity
 #==============================================================================
 
-
-#cylinder_sor.sourcePanel_solve(freestream=windspeed)
-
-#Vtot_sor = cylinder_sor.Vinduced + windspeed
-
-
-cylinder.vortexPanel_solve(evaluationPoints = mesh,
-                           vortexPoints     = None,
-                           freestream       = windspeed)
+V_external           = array([repeat(windspeed[0],shape(cylinder.collocationPoint)[1]),
+                              repeat(windspeed[1],shape(cylinder.collocationPoint)[1])])
+                              
+#cylinder.vortexPanel_solve(Vinduced         = V_external,
+#                           evaluationPoint  = mesh)
+                                               
+#cylinder.sourcePanel_solve(Vinduced         = V_external,
+#                           evaluationPoint  = mesh)                                               
+                                               
+cylinder.sourceVortexPanel_solve(Vinduced         = V_external,
+                                 evaluationPoint  = mesh)
                            
-Vtot = cylinder.Vinduced + windspeed
-
+Vtot = cylinder.sourceVortex_V + windspeed
 Vres = (Vtot[0]**2 + Vtot[1]**2)**0.5
 
 #==============================================================================
 # Plots
 #==============================================================================
 figure()
+cylinder.plot('geometry')
+contourf(x,y,reshape(Vres,shape(x)))
+#contourf(x,y,reshape(Vtot[0],shape(x)))
+#quiver(mesh[0],mesh[1],Vtot[0],Vtot[1],Vres)
+#plot(x,y,'k.')
+axis('scaled')
+grid('on')
+colorbar()
 #xlabel('$\theta$')
 #title('Comparison: Pressure coefficent')
 #ylabel('Pressure coefficient $C_p$')
-cylinder.plot('geometry')
-contourf(x,y,reshape(Vres,shape(x)))
-plot(x,y,'k.')
-axis('scaled')
-grid('on')
-colorbar
-colorbar()

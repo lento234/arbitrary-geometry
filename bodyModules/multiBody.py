@@ -91,7 +91,11 @@ class multiBody:
         
         self.normal  = normalVector(self.panelStart,  self.panelEnd)
         self.tangent = tangentVector(self.panelStart,  self.panelEnd)
-            
+        
+        self.collocationPoint = (self.panelStart + self.panelEnd)/2
+        self.vortex_collocationPoint = collocationPoint(self.panelStart,self.panelEnd, -self.normal) # inside the body
+        self.source_collocationPoint = collocationPoint(self.panelStart,self.panelEnd, self.normal) # inside the body
+
     # Plotting function
     def plot(self,attribute,marker='k'):
         
@@ -103,23 +107,83 @@ class multiBody:
                      self.__dict__[attribute][1,start:end],marker)
             
             start = end
+
+    def vortexPanel_solve(self, Vinduced, evaluationPoint = 'self'):
+        '''
+        Solve potential flow using vortex panels
+        '''
+        
+        # Defining collocationPoints: slightly inside
+        self.vortex_collocationPoint = collocationPoint(self.panelStart,self.panelEnd, -self.normal) # inside the body
+        
+        # Calculate RHS - zero tangential
+        self.vortex_RHS = vortex2D.RightHandSide(Vinduced,
+                                                 self.tangent)
+                                                 
+        # Calculate the influence matrix
+        self.vortex_A   = vortex2D.solve(self.vortex_collocationPoint,
+                                         self.panelStart,
+                                         self.panelEnd,
+                                         self.tangent)
+                                         
+        # Solve the vortex Method. Ax=RHS
+        self.vortex_gamma = np.linalg.solve(self.vortex_A, self.vortex_RHS)
+        
+        # To show no transpiration    
+        if evaluationPoint is 'self':
+            evaluationPoint = self.vortex_collocationPoint
             
-    def sourcePanel_solve(self, evaluationPoints='self', vortexPoints=None, freestream=[0.,0.]):
+        # Calculate induced velocity on body
+        self.vortex_V = vortex2D.evaluate(self.vortex_gamma,
+                                          evaluationPoint,
+                                          self.panelStart,
+                                          self.panelEnd)
+                                          
+    def vortexNormPanel_solve(self, Vinduced, evaluationPoint = 'self'):
+        '''
+        Solve potential flow using vortex panels
+        '''
+        
+        # Defining collocationPoints: slightly inside
+        self.vortexNorm_collocationPoint = collocationPoint(self.panelStart,self.panelEnd, -self.normal) # inside the body
+        
+        # Calculate RHS - zero tangential
+        self.vortexNorm_RHS = vortex2D.RightHandSide(Vinduced,
+                                                     self.tangent)
+                                                 
+        # Calculate the influence matrix
+        self.vortexNorm_A   = vortex2D.solve(self.vortexNorm_collocationPoint,
+                                             self.panelStart,
+                                             self.panelEnd,
+                                             self.tangent)
+                                         
+        # Solve the vortex Method. Ax=RHS
+        self.vortexNorm_gamma = np.linalg.solve(self.vortexNorm_A, self.vortexNorm_RHS)
+        
+        # To show no transpiration    
+        if evaluationPoint is 'self':
+            evaluationPoint = self.vortexNorm_collocationPoint
+            
+        # Calculate induced velocity on body
+        self.vortexNorm_V = vortex2D.evaluate(self.vortexNorm_gamma,
+                                              evaluationPoint,
+                                              self.panelStart,
+                                              self.panelEnd)                                          
+                                              
+    def sourcePanel_solve(self, Vinduced, evaluationPoint='self'):
         '''
         Solve the panel problem
         '''
         
         # Defining collocationPoint
-        self.collocationPoint = collocationPoint(self.panelStart, self.panelEnd, self.normal) # + normal
+        self.source_collocationPoint = collocationPoint(self.panelStart, self.panelEnd, self.normal) # + normal
         
         # Calculate RHS - Neumann B.C
-        self.source_RHS = source2D.RightHandSide(self.collocationPoint, 
-                                                 self.normal, 
-                                                 vortexPoints, 
-                                                 freestream)
+        self.source_RHS = source2D.RightHandSide(Vinduced, 
+                                                 self.normal)
         
         # Calculate the influence matrix
-        self.source_A   = source2D.solve(self.collocationPoint, 
+        self.source_A   = source2D.solve(self.source_collocationPoint, 
                                          self.panelStart,
                                          self.panelEnd,
                                          self.normal)
@@ -128,22 +192,79 @@ class multiBody:
         self.source_sigma = np.linalg.solve(self.source_A, self.source_RHS)
     
         # To show no transpiration    
-        if evaluationPoints is 'self':
-            evaluationPoints = self.collocationPoint
+        if evaluationPoint is 'self':
+            evaluationPoint = self.source_collocationPoint
             
         # Calculate induced velocity on body
-        self.Vinduced = source2D.evaluate(self.source_sigma,
-                                          evaluationPoints,
+        self.source_V = source2D.evaluate(self.source_sigma,
+                                          evaluationPoint,
                                           self.panelStart,
                                           self.panelEnd)
+                                          
+                                          
+    def sourceVortexPanel_solve(self, Vinduced, evaluationPoint='self'):
+        '''
+        '''
+
+        # Defining collocation Point        
+        self.source_collocationPoint = collocationPoint(self.panelStart, self.panelEnd, self.normal)
+        self.vortex_collocationPoint = collocationPoint(self.panelStart, self.panelEnd, -self.normal)
         
-    def vortexPanel_solve(self, evaluationPoints = 'self', vortexPoints=None, freestream=[[0.],[0.]]):
+        # Number of collocation points
+        n = np.shape(self.collocationPoint)[1]
+        
+        # Calculate the RHS - Neumann B.C [normal and tangent]
+        self.sourceVortex_RHS_normal   = source2D.RightHandSide(Vinduced, self.normal)
+        self.sourceVortex_RHS_tangent  = vortex2D.RightHandSide(Vinduced, self.tangent)
+        #   Total RHS
+        self.sourceVortex_RHS          = np.concatenate([self.sourceVortex_RHS_normal, self.sourceVortex_RHS_tangent])
+         
+        # Calculate the influence Matrix
+        #   normal
+        self.sourceVortex_A_normal = source2D.solve(self.source_collocationPoint, self.panelStart, self.panelEnd, self.normal)
+        self.sourceVortex_B_normal = vortex2D.solve(self.vortex_collocationPoint, self.panelStart, self.panelEnd, self.normal)
+        #   tangent
+        self.sourceVortex_A_tangent = source2D.solve(self.source_collocationPoint, self.panelStart, self.panelEnd, self.tangent)
+        self.sourceVortex_B_tangent = vortex2D.solve(self.vortex_collocationPoint, self.panelStart, self.panelEnd, self.tangent)
+        
+        # Combined influence matrix
+        self.sourceVortex_C = np.zeros((n*2,n*2)) #[[1,2],[3,4]]
+        
+        self.sourceVortex_C[:n,:n] = self.sourceVortex_A_normal # 1
+        self.sourceVortex_C[:n,n:] = self.sourceVortex_B_normal # 2
+        self.sourceVortex_C[n:,:n] = self.sourceVortex_A_tangent # 3 
+        self.sourceVortex_C[n:,n:] = self.sourceVortex_B_tangent # 4
+        
+        # Solve the panel Menthod, combined B.Cs
+        self.sourceVortex_SigmaGamma = np.linalg.solve(self.sourceVortex_C, self.sourceVortex_RHS)
+        #self.sourceVortex_SigmaGamma = np.linalg.lstsq(self.sourceVortex_C, self.sourceVortex_RHS)
+        
+        self.sourceVortex_sigma = self.sourceVortex_SigmaGamma[:n]
+        self.sourceVortex_gamma = self.sourceVortex_SigmaGamma[n:]
+        
+        # To show no transpiration    
+        if evaluationPoint is 'self':
+            evaluationPoint_source = self.source_collocationPoint
+            evaluationPoint_vortex = self.vortex_collocationPoint
+            
+        else:
+            evaluationPoint_source = evaluationPoint
+            evaluationPoint_vortex = evaluationPoint
+            
+        # Calculate induced velocity on body
+        self.sourceVortex_Vsorc = source2D.evaluate(self.sourceVortex_sigma, evaluationPoint_source, self.panelStart, self.panelEnd)        
+        self.sourceVortex_Vvort = vortex2D.evaluate(self.sourceVortex_gamma, evaluationPoint_vortex, self.panelStart, self.panelEnd)
+        
+        self.sourceVortex_V = self.sourceVortex_Vsorc + self.sourceVortex_Vvort
+                      
+"""                                
+    def vortexPanel_solve(self, evaluationPoint = 'self', Velocity_Induced):
         '''
         Solve potential flow using vortex panels
         '''
         
         # Defining collocationPoints: slightly inside
-        self.collocationPoint = collocationPoint(self.panelStart,self.panelEnd, -self.normal) # inside the body
+        #self.collocationPoint = collocationPoint(self.panelStart,self.panelEnd, -self.normal) # inside the body
         
         # Calculate RHS - zero tangential
         self.vortex_RHS = vortex2D.RightHandSide(self.collocationPoint,
@@ -169,4 +290,37 @@ class multiBody:
                                           evaluationPoints,
                                           self.panelStart,
                                           self.panelEnd)
-                                         
+        
+"""  
+#    def vortexPanel_solve(self, evaluationPoints = 'self', vortexPoints=None, freestream=[[0.],[0.]]):
+#        '''
+#        Solve potential flow using vortex panels
+#        '''
+#        
+#        # Defining collocationPoints: slightly inside
+#        self.collocationPoint = collocationPoint(self.panelStart,self.panelEnd, -self.normal) # inside the body
+#        
+#        # Calculate RHS - zero tangential
+#        self.vortex_RHS = vortex2D.RightHandSide(self.collocationPoint,
+#                                                 self.tangent,
+#                                                 vortexPoints,
+#                                                 freestream)
+#                                                 
+#        # Calculate the influence matrix
+#        self.vortex_A   = vortex2D.solve(self.collocationPoint,
+#                                         self.panelStart,
+#                                         self.panelEnd,
+#                                         self.tangent)
+#                                         
+#        # Solve the vortex Method. Ax=RHS
+#        self.vortex_gamma = np.linalg.solve(self.vortex_A, self.vortex_RHS)
+#        
+#        # To show no transpiration    
+#        if evaluationPoints is 'self':
+#            evaluationPoints = self.collocationPoint
+#            
+#        # Calculate induced velocity on body
+#        self.Vinduced = vortex2D.evaluate(self.vortex_gamma,
+#                                          evaluationPoints,
+#                                          self.panelStart,
+#                                          self.panelEnd)

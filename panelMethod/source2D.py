@@ -122,6 +122,18 @@ def evaluate(Sigma, collocationPoint, panelStart, panelEnd):
 #==============================================================================
 # Calculate the RHS of the problem
 #==============================================================================
+def RightHandSide(Vinduced, normal):
+    '''
+    Solve the right hand side of the panel method problem
+    '''
+    
+    #if vortex is None:
+    # If no point vortex needs to be calculated
+    RHS = -(Vinduced[0]*normal[0] + Vinduced[1]*normal[1])
+        
+    return RHS
+    
+"""
 def RightHandSide(collocationPoint, normal, vortex = None, Freestream = [0., 0.]):
     '''
     Solve the right hand side of the panel method problem
@@ -139,3 +151,4 @@ def RightHandSide(collocationPoint, normal, vortex = None, Freestream = [0., 0.]
         RHS = -((V_vort[0] + Freestream[0])*normal[0] + (V_vort[1] + Freestream[1])*normal[1])
         
     return RHS
+"""

@@ -45,22 +45,23 @@ cylinder = multiBody(dict(body         = tower,
 # Defining Vortex and scan points
 #==============================================================================
 
-x,y = meshgrid(linspace(-2,2,200),linspace(-2,2,200))
+x,y = meshgrid(linspace(-1,1,200),linspace(-1,1,200))
 mesh = array([concatenate(x),concatenate(y)])
  
 #==============================================================================
 # Solving the vortex panel problem
 #==============================================================================
-
-cylinder.vortexPanel_solve(evaluationPoints = mesh,
-                           vortexPoints     = None,
-                           freestream       = windspeed)
+V_external           = array([repeat(windspeed[0],shape(cylinder.collocationPoint)[1]),
+                              repeat(windspeed[1],shape(cylinder.collocationPoint)[1])])
+                              
+cylinder.vortexPanel_solve(Vinduced         = V_external,
+                           evaluationPoint  = mesh)
 
 
 #==============================================================================
 # Calculating the induced Velocity 
 #==============================================================================
-cylinder_Vtot = cylinder.Vinduced + windspeed
+cylinder_Vtot = cylinder.vortex_V + windspeed
 cylinder_Vres = sqrt(cylinder_Vtot[0]**2 + cylinder_Vtot[1]**2) 
 
 
@@ -70,7 +71,7 @@ cylinder_Vres = sqrt(cylinder_Vtot[0]**2 + cylinder_Vtot[1]**2)
 figure()
 cylinder.plot('geometry')
 contourf(x,y,reshape(cylinder_Vres,shape(x)))
-#quiver(mesh[0],mesh[1],cylinder_Vtot[0],cylinder_Vtot[1],cylinder_Vres)
+quiver(mesh[0],mesh[1],cylinder_Vtot[0],cylinder_Vtot[1],cylinder_Vres)
 colorbar()
 grid('on')
 axis('scaled')
