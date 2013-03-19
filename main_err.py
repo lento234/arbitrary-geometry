@@ -25,8 +25,8 @@ ion() # Interactive on
 
 # Control Parameters
 windspeed = np.array([[1.], [0.]]) # x-dir and y-dir respectively
-n = [10,25,50,100,200,500,1000,2000]
-#n = [10,50,100]
+#n = [10,25,50,100,200,500,1000,2000]
+n = [10,50,100]
 
 #==============================================================================
 # Solving for various panels
@@ -97,7 +97,7 @@ for n_panels in n:
     Vtot_sorVort = cylinder.sourceVortex_V + windspeed
     Qt_sorVort = Vtot_sorVort[0]*cylinder.tangent[0] + Vtot_sorVort[1]*cylinder.tangent[1]
     #Cp_sorVort = 1 - (Qt_sorVort/sum(windspeed))**2
-    Cp_sorVort = 1 - ((sum(windspeed)*cylinder.tangent[0] + cylinder.sourceVortex_gamma/2)/sum(windspeed))**2 - (Qt_sorVort/sum(windspeed))**2
+    Cp_sorVort = 1 - ((sum(windspeed)*cylinder.tangent[0] + cylinder.sourceVortex_gamma/2)/sum(windspeed))**2 
     
     # Analytical Solution
     theta = rad2deg(np.linspace(np.pi,-np.pi,(n_panels)))

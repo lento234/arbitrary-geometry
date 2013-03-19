@@ -14,12 +14,13 @@ import numpy as np
 import matplotlib.pylab as plt # plotting module
 
 # Custom modules
-from collocationPoint import collocationPoint # Calculate the location of collocation point
-from unitVectors import normalVector, tangentVector # calculate the normal and tangent vector of panels
+#from collocationPoint import collocationPoint # Calculate the location of collocation point
+#from unitVectors import normalVector, tangentVector # calculate the normal and tangent vector of panels
 from bodyTransform import body2global # transform the body coordinates to global geometry
-from bodyModules.generate2DCylinder import generate2DCylinder # Create Circle
 from bodyModules.getCoordinates import getCoordinates # Extracts coordinates
 
+#from bodyModules.generate2DCylinder import generate2DCylinder # Create Circle
+import generateCoordinates
 
 #==============================================================================
 # Body class: Stores all the data and function related to a given body
@@ -112,7 +113,10 @@ class body:
         
         # Generating coordintes
         if shape[0] is 'cylinder':
-            self.geometry_normalized = generate2DCylinder(shape[1])
+            self.geometry_normalized = generateCoordinates.cylinder2D(shape[1])
+        elif shape[0] is 'block':
+            # generate block coordinates
+            self.geometry_normalized = generateCoordinates.block2D(shape[1])
         else:
             # body is airfoil; # extract data from file containing normalized coordinates
             # coordinates are given anti-clockwise
