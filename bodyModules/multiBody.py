@@ -26,6 +26,7 @@ from bodyTransform import body2global
 import matplotlib.pylab as plt # plotting module
 from collocationPoint import collocationPoint # Calculate the location of collocation point
 from unitVectors import normalVector, tangentVector # calculate the normal and tangent vector of panels
+import time
 
 #==============================================================================
 # Multi-body module to store all a multi-body data
@@ -119,16 +120,23 @@ class multiBody:
         # Calculate RHS - zero tangential
         self.vortex_RHS = vortex2D.RightHandSide(Vinduced,
                                                  self.tangent)
-                                                 
+        #start = time.time()
+                                         
         # Calculate the influence matrix
         self.vortex_A   = vortex2D.solve(self.vortex_collocationPoint,
                                          self.panelStart,
                                          self.panelEnd,
                                          self.tangent)
                                          
+        #print 'vortex:' + str(time.time() - start)
+        #start = time.time()
+        
         # Solve the vortex Method. Ax=RHS
         self.vortex_gamma = np.linalg.solve(self.vortex_A, self.vortex_RHS)
         
+        #print 'vortex:' + str(time.time() - start)
+        #start = time.time()
+
         # To show no transpiration    
         if evaluationPoint is 'self':
             evaluationPoint = self.vortex_collocationPoint
@@ -139,36 +147,39 @@ class multiBody:
                                           self.panelStart,
                                           self.panelEnd)
                                           
-    def vortexNormPanel_solve(self, Vinduced, evaluationPoint = 'self'):
-        '''
-        Solve potential flow using vortex panels
-        '''
-        
-        # Defining collocationPoints: slightly inside
-        self.vortexNorm_collocationPoint = collocationPoint(self.panelStart,self.panelEnd, -self.normal) # inside the body
-        
-        # Calculate RHS - zero tangential
-        self.vortexNorm_RHS = vortex2D.RightHandSide(Vinduced,
-                                                     self.tangent)
-                                                 
-        # Calculate the influence matrix
-        self.vortexNorm_A   = vortex2D.solve(self.vortexNorm_collocationPoint,
-                                             self.panelStart,
-                                             self.panelEnd,
-                                             self.tangent)
-                                         
-        # Solve the vortex Method. Ax=RHS
-        self.vortexNorm_gamma = np.linalg.solve(self.vortexNorm_A, self.vortexNorm_RHS)
-        
-        # To show no transpiration    
-        if evaluationPoint is 'self':
-            evaluationPoint = self.vortexNorm_collocationPoint
-            
-        # Calculate induced velocity on body
-        self.vortexNorm_V = vortex2D.evaluate(self.vortexNorm_gamma,
-                                              evaluationPoint,
-                                              self.panelStart,
-                                              self.panelEnd)                                          
+       
+         
+                                          
+    #    def vortexNormPanel_solve(self, Vinduced, evaluationPoint = 'self'):
+    #        '''
+    #        Solve potential flow using vortex panels
+    #        '''
+    #        
+    #        # Defining collocationPoints: slightly inside
+    #        self.vortexNorm_collocationPoint = collocationPoint(self.panelStart,self.panelEnd, -self.normal) # inside the body
+    #        
+    #        # Calculate RHS - zero tangential
+    #        self.vortexNorm_RHS = vortex2D.RightHandSide(Vinduced,
+    #                                                     self.tangent)
+    #                                                 
+    #        # Calculate the influence matrix
+    #        self.vortexNorm_A   = vortex2D.solve(self.vortexNorm_collocationPoint,
+    #                                             self.panelStart,
+    #                                             self.panelEnd,
+    #                                             self.tangent)
+    #                                         
+    #        # Solve the vortex Method. Ax=RHS
+    #        self.vortexNorm_gamma = np.linalg.solve(self.vortexNorm_A, self.vortexNorm_RHS)
+    #        
+    #        # To show no transpiration    
+    #        if evaluationPoint is 'self':
+    #            evaluationPoint = self.vortexNorm_collocationPoint
+    #            
+    #        # Calculate induced velocity on body
+    #        self.vortexNorm_V = vortex2D.evaluate(self.vortexNorm_gamma,
+    #                                              evaluationPoint,
+    #                                              self.panelStart,
+    #                                              self.panelEnd)                                          
                                               
     def sourcePanel_solve(self, Vinduced, evaluationPoint='self'):
         '''
@@ -182,25 +193,31 @@ class multiBody:
         self.source_RHS = source2D.RightHandSide(Vinduced, 
                                                  self.normal)
         
+        #start = time.time()
         # Calculate the influence matrix
         self.source_A   = source2D.solve(self.source_collocationPoint, 
                                          self.panelStart,
                                          self.panelEnd,
                                          self.normal)
         
+
         # Solve the panel Method. Equation: Ax = RHS. Solve for x
         self.source_sigma = np.linalg.solve(self.source_A, self.source_RHS)
-    
+        
+        #print 'sourcePanel:' + str(time.time() - start)
+
         # To show no transpiration    
         if evaluationPoint is 'self':
             evaluationPoint = self.source_collocationPoint
-            
+         
+        start = time.time() 
         # Calculate induced velocity on body
         self.source_V = source2D.evaluate(self.source_sigma,
                                           evaluationPoint,
                                           self.panelStart,
                                           self.panelEnd)
-                                          
+        print str(time.time() - start)
+
                                           
     def sourceVortexPanel_solve(self, Vinduced, evaluationPoint='self'):
         '''
@@ -234,9 +251,14 @@ class multiBody:
         self.sourceVortex_C[:n,n:] = self.sourceVortex_B_normal # 2
         self.sourceVortex_C[n:,:n] = self.sourceVortex_A_tangent # 3 
         self.sourceVortex_C[n:,n:] = self.sourceVortex_B_tangent # 4
-        
+    
+        #start = time.time()
+
         # Solve the panel Menthod, combined B.Cs
         self.sourceVortex_SigmaGamma = np.linalg.solve(self.sourceVortex_C, self.sourceVortex_RHS)
+        
+        #print 'sourceVortexPanel:' + str(time.time() - start)
+
         #self.sourceVortex_SigmaGamma = np.linalg.lstsq(self.sourceVortex_C, self.sourceVortex_RHS)
         
         self.sourceVortex_sigma = self.sourceVortex_SigmaGamma[:n]
@@ -254,8 +276,9 @@ class multiBody:
         # Calculate induced velocity on body
         self.sourceVortex_Vsorc = source2D.evaluate(self.sourceVortex_sigma, evaluationPoint_source, self.panelStart, self.panelEnd)        
         self.sourceVortex_Vvort = vortex2D.evaluate(self.sourceVortex_gamma, evaluationPoint_vortex, self.panelStart, self.panelEnd)
-        
         self.sourceVortex_V = self.sourceVortex_Vsorc + self.sourceVortex_Vvort
+        
+
                       
 """                                
     def vortexPanel_solve(self, evaluationPoint = 'self', Velocity_Induced):
